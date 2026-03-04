@@ -1,0 +1,74 @@
+# Shared Redis instance for all rate limiter pods
+# All 3 ext-cache services (sadiel, clusterip, gitlab) use selector {app: ext-cache, ext-cache: redis}
+# so this single Redis pod serves all of them → rate limits are exact (no 3x multiplier)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ext-cache-enterprise-agentgateway-sadiel
+  namespace: agentgateway-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ext-cache
+      ext-cache: redis
+  template:
+    metadata:
+      labels:
+        app: ext-cache
+        ext-cache: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+---
+# Services must be created manually — the operator creates them but they can disappear on reconcile
+# All 3 services point to the same Redis pod via the shared selector
+apiVersion: v1
+kind: Service
+metadata:
+  name: ext-cache-enterprise-agentgateway-sadiel
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: ext-cache
+    ext-cache: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ext-cache-enterprise-agentgateway-clusterip
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: ext-cache
+    ext-cache: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ext-cache-enterprise-agentgateway-gitlab
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: ext-cache
+    ext-cache: redis
+  ports:
+  - port: 6379
+    targetPort: 6379

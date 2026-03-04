@@ -1,0 +1,18 @@
+apiVersion: ratelimit.solo.io/v1alpha1
+kind: RateLimitConfig
+metadata:
+  name: openai-request-rate-limit
+  namespace: agentgateway-system
+spec:
+  raw:
+    descriptors:
+    - key: generic_key
+      value: openai-request-counter
+      rateLimit:
+        requestsPerUnit: 3
+        unit: MINUTE
+    rateLimits:
+    - actions:
+      - genericKey:
+          descriptorValue: openai-request-counter
+      type: REQUEST
