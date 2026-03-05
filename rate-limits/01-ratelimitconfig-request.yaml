@@ -1,18 +1,25 @@
+# Global LLM Request Rate Limit
+# Applies to ALL LLM traffic through llm-provider-route (both OpenAI and Anthropic).
+# All providers share one counter — this is by design for T-Mobile's unified policy model.
+#
+# NOTE: sectionName targeting on entRateLimit does NOT work for per-provider
+# counter isolation. If per-provider limits are needed, use separate HTTPRoutes.
+---
 apiVersion: ratelimit.solo.io/v1alpha1
 kind: RateLimitConfig
 metadata:
-  name: openai-request-rate-limit
+  name: llm-request-rate-limit
   namespace: agentgateway-system
 spec:
   raw:
     descriptors:
     - key: generic_key
-      value: openai-request-counter
+      value: llm-request-counter
       rateLimit:
         requestsPerUnit: 3
         unit: MINUTE
     rateLimits:
     - actions:
       - genericKey:
-          descriptorValue: openai-request-counter
+          descriptorValue: llm-request-counter
       type: REQUEST

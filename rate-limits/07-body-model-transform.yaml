@@ -1,0 +1,34 @@
+# Body Model Transform — EnterpriseAgentgatewayPolicy
+#
+# Merges the model name from ExtAuth into the request body and sets the
+# x-model-provider header for routing. This allows the PreRouting ExtAuth
+# server to control which model is actually sent to the LLM provider.
+#
+# In production, ExtAuth validates the agent's Entra ID JWT and maps the
+# client_id to an approved model via CMDB lookup.
+#
+# The extauthz[] accessor reads values from the ext auth response:
+#   - extauthz["x-model-provider"] — provider name (openai, anthropic)
+#   - extauthz["x-model-name"] — approved model name
+#
+# Body merge: replaces the "model" field in the JSON body with the ExtAuth-approved model.
+# Header set: sets x-model-provider for HTTPRoute header-based routing.
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: body-model-transform
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: llm-provider-route
+  traffic:
+    transformation:
+      request:
+        set:
+        - name: x-model-provider
+          value: extauthz["x-model-provider"]
+        body: |
+          toJson(json(request.body).merge({"model": extauthz["x-model-name"]}))
