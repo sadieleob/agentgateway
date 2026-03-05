@@ -1,0 +1,42 @@
+# Per-Agent Rate Limit Policy — AgentgatewayPolicy with CEL descriptors
+#
+# Uses CEL expressions to extract agent identity (x-client-id header)
+# for per-agent rate limiting buckets.
+#
+# The x-client-id header should be set by the PreRouting ExtAuth server
+# after validating the agent's Entra ID JWT and extracting the client_id claim.
+#
+# Per GitHub issue #1021 workaround: the generic_key entry with the
+# namespace.name prefix is REQUIRED for the rate limiter to match
+# the RateLimitConfig descriptor tree.
+#
+# CEL limitation (GitHub issue #850): CEL values must evaluate to a string.
+# request.headers["x-client-id"] returns a string, so this works.
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: per-agent-rate-limit
+  namespace: agentgateway-system
+  labels:
+    app: agentgateway
+    purpose: per-agent-rate-limiting
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: llm-provider-route
+  traffic:
+    rateLimit:
+      global:
+        backendRef:
+          name: rate-limiter-enterprise-agentgateway-sadiel
+          namespace: agentgateway-system
+          port: 8083
+        domain: solo.io
+        descriptors:
+        - entries:
+          - name: "generic_key"
+            expression: '"agentgateway-system.per-agent-request-rate-limit"'
+          - name: "x-client-id"
+            expression: 'request.headers["x-client-id"]'

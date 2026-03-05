@@ -1,18 +1,22 @@
+# Global LLM Token Rate Limit
+# Applies to ALL LLM traffic through llm-provider-route (both OpenAI and Anthropic).
+# Counts actual tokens consumed (parsed from LLM provider response).
+---
 apiVersion: ratelimit.solo.io/v1alpha1
 kind: RateLimitConfig
 metadata:
-  name: openai-token-rate-limit
+  name: llm-token-rate-limit
   namespace: agentgateway-system
 spec:
   raw:
     descriptors:
     - key: generic_key
-      value: openai-token-counter
+      value: llm-token-counter
       rateLimit:
         requestsPerUnit: 100
         unit: MINUTE
     rateLimits:
     - actions:
       - genericKey:
-          descriptorValue: openai-token-counter
+          descriptorValue: llm-token-counter
       type: TOKEN
