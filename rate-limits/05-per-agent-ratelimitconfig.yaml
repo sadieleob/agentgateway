@@ -1,6 +1,6 @@
 # Per-Agent Rate Limiting — RateLimitConfig resources
 #
-# T-Mobile requirement: rate limit per autonomous agent identity.
+# Requirement: rate limit per autonomous agent identity.
 # Agents are identified by Entra ID service principal client_id,
 # passed in the x-client-id header (set by PreRouting ExtAuth after
 # JWT validation).

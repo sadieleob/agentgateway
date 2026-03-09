@@ -1,4 +1,4 @@
-# Token Consumption Reporting Guidance — T-Mobile
+# Token Consumption Reporting Guidance
 
 > **Context**: Rajeev/Keith meeting (2026-03-03). Stream owner: Vijay.
 > Keith recommended a kickoff call to review available data sources.
@@ -6,7 +6,7 @@
 
 ## Requirement Summary
 
-T-Mobile needs to track **LLM token usage per autonomous agent**:
+The customer needs to track **LLM token usage per autonomous agent**:
 - Agents identified by Entra ID service principal **client_id**
 - Client_id maps to internal CMDB: org → VP → director hierarchy
 - Reporting dashboard for token consumption by agent/org
@@ -57,7 +57,7 @@ Agentgateway logs token usage from the **LLM provider response**:
 |-----|-----|
 | Richest data — full request/response headers, JWT claims | Requires log pipeline to Splunk |
 | No cardinality limits | Query latency (not real-time) |
-| T-Mobile already uses Splunk | Dashboard build effort |
+| Customer already uses Splunk | Dashboard build effort |
 | Can correlate with other Splunk data sources | |
 
 ## Data Source 2: Prometheus Metrics (→ Grafana)
@@ -115,7 +115,7 @@ Per Keith's guidance from the meeting:
 
 - [ ] Solo to demonstrate access log fields and how token usage appears
 - [ ] Solo to show default Prometheus metrics for agentgateway LLM
-- [ ] T-Mobile (Vijay) to confirm Splunk pipeline availability
+- [ ] Customer (Vijay) to confirm Splunk pipeline availability
 - [ ] Discuss: does ExtAuth need to set additional headers for reporting?
 - [ ] Discuss: per-agent Prometheus labels — is OTel or proxy config preferred?
 - [ ] Agree on dashboard mockup format and delivery timeline
