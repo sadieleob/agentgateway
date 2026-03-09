@@ -1,0 +1,58 @@
+# JWT Authentication for agentgateway-routing-demo
+#
+# This adds JWT validation (Microsoft Entra ID) to the existing access-log-headers
+# eagpol rather than creating a new policy, because only one policy per phase
+# is allowed on a gateway.
+#
+# Existing policies on agentgateway-routing-demo:
+#   - access-log-headers: frontend.accessLog (frontend phase) ← JWT auth added here
+#   - extauth-model-override: traffic.extAuth + phase: PreRouting (PreRouting phase)
+#
+# The entra-idp AgentgatewayBackend (already exists) points to login.microsoftonline.com:443
+# and is reused for the JWKS fetch.
+#
+# Tenant ID: e7266048-a758-4738-b82b-1213bc9ad6ba
+# OIDC Discovery: https://login.microsoftonline.com/e7266048-a758-4738-b82b-1213bc9ad6ba/v2.0/.well-known/openid-configuration
+# Issuer (v1.0 - actual): https://sts.windows.net/e7266048-a758-4738-b82b-1213bc9ad6ba/
+# Issuer (v2.0 - not used): https://login.microsoftonline.com/e7266048-a758-4738-b82b-1213bc9ad6ba/v2.0
+# App registration accessTokenAcceptedVersion=1 (default), so tokens use v1.0 issuer
+# JWKS URI: https://login.microsoftonline.com/e7266048-a758-4738-b82b-1213bc9ad6ba/discovery/v2.0/keys
+#
+# NOTE: If your Entra ID app registration has accessTokenAcceptedVersion=1 (default),
+# the token issuer will be https://sts.windows.net/e7266048-a758-4738-b82b-1213bc9ad6ba/
+# and you must update the issuer field below to match.
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: access-log-headers
+  namespace: agentgateway-system
+spec:
+  frontend:
+    accessLog:
+      attributes:
+        add:
+        - expression: request.headers
+          name: request.all_headers
+        - expression: response.headers
+          name: response.all_headers
+        - expression: extauthz
+          name: extauthz.metadata
+  traffic:
+    jwtAuthentication:
+      mode: Strict
+      providers:
+      - issuer: "https://sts.windows.net/e7266048-a758-4738-b82b-1213bc9ad6ba/"
+        jwks:
+          remote:
+            jwksPath: "e7266048-a758-4738-b82b-1213bc9ad6ba/discovery/v2.0/keys"
+            cacheDuration: "5m"
+            backendRef:
+              group: agentgateway.dev
+              kind: AgentgatewayBackend
+              name: entra-idp
+              namespace: agentgateway-system
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: agentgateway-routing-demo

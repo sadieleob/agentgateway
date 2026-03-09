@@ -1,0 +1,39 @@
+# Per-Client LLM Token Rate Limit (keyed by JWT appid claim)
+#
+# Limits each Entra ID client/agent to 10,000 LLM tokens per hour.
+# Uses jwt.appid CEL expression to extract the client_id from the JWT.
+#
+# Microsoft Entra ID v1.0 tokens use "appid" claim (not "client_id").
+# If using v2.0 tokens, the claim is "azp" instead.
+#
+# Descriptor tree (as seen by the rate limiter):
+#   Level 1: generic_key = agentgateway-system.token-per-client-rate-limit (auto-prefix)
+#   Level 2: client_id = <jwt.appid value> → rate limit applied here
+#
+# Requires:
+#   1. JWT auth configured on the gateway (traffic.jwtAuthentication in access-log-headers eagpol)
+#   2. Descriptor entry in the llm-rate-limit AgentgatewayPolicy:
+#        - entries:
+#          - name: "generic_key"
+#            expression: '"agentgateway-system.token-per-client-rate-limit"'
+#          - name: "client_id"
+#            expression: 'jwt.appid'
+---
+apiVersion: ratelimit.solo.io/v1alpha1
+kind: RateLimitConfig
+metadata:
+  name: token-per-client-rate-limit
+  namespace: agentgateway-system
+spec:
+  raw:
+    descriptors:
+    - key: client_id
+      rateLimit:
+        requestsPerUnit: 10000
+        unit: HOUR
+    rateLimits:
+    - actions:
+      - cel:
+          expression: 'jwt.appid'
+          key: "client_id"
+      type: TOKEN

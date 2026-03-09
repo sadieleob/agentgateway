@@ -1,4 +1,4 @@
-# Rate Limiting Test Matrix — T-Mobile Agentgateway
+# Rate Limiting Test Matrix — Agentgateway
 
 > **Cluster**: `sortega-eks-demo` (EKS us-west-2)
 > **Gateway**: `agentgateway-routing-demo` (enterprise-agentgateway-sadiel)

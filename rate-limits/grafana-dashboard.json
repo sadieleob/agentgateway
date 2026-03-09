@@ -550,7 +550,7 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["agentgateway", "rate-limiting", "llm", "t-mobile"],
+  "tags": ["agentgateway", "rate-limiting", "llm"],
   "templating": {
     "list": [
       {
