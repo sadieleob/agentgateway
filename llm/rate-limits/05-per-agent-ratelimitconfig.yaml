@@ -1,0 +1,60 @@
+# Per-Agent Rate Limiting — RateLimitConfig resources
+#
+# Requirement: rate limit per autonomous agent identity.
+# Agents are identified by Entra ID service principal client_id,
+# passed in the x-client-id header (set by PreRouting ExtAuth after
+# JWT validation).
+#
+# Architecture:
+#   1. Agent authenticates via Entra ID → gets JWT with client_id claim
+#   2. PreRouting ExtAuth validates JWT, extracts client_id → sets x-client-id header
+#   3. Rate limiter uses x-client-id as descriptor key → per-agent bucket
+#
+# IMPORTANT: The descriptor tree must align with the AgentgatewayPolicy entries.
+# The rate limiter auto-prepends "namespace.name" as the first generic_key level.
+# Do NOT duplicate this prefix in the descriptors tree — it creates a 3-level
+# tree that won't match the 2-entry policy descriptors.
+#
+# Descriptor tree (as seen by the rate limiter):
+#   Level 1: generic_key = agentgateway-system.per-agent-request-rate-limit (auto-prefix)
+#   Level 2: x-client-id = <agent_id> → rate limit applied here
+---
+# Per-Agent Request Rate Limit
+# Each agent gets 50 requests per minute across all LLM providers
+apiVersion: ratelimit.solo.io/v1alpha1
+kind: RateLimitConfig
+metadata:
+  name: per-agent-request-rate-limit
+  namespace: agentgateway-system
+spec:
+  raw:
+    descriptors:
+    - key: x-client-id
+      rateLimit:
+        requestsPerUnit: 100
+        unit: MINUTE
+    rateLimits:
+    - actions:
+      - genericKey:
+          descriptorValue: placeholder
+      type: REQUEST
+---
+# Per-Agent Token Rate Limit
+# Each agent gets 10000 tokens per minute across all LLM providers
+apiVersion: ratelimit.solo.io/v1alpha1
+kind: RateLimitConfig
+metadata:
+  name: per-agent-token-rate-limit
+  namespace: agentgateway-system
+spec:
+  raw:
+    descriptors:
+    - key: x-client-id
+      rateLimit:
+        requestsPerUnit: 100
+        unit: MINUTE
+    rateLimits:
+    - actions:
+      - genericKey:
+          descriptorValue: placeholder
+      type: TOKEN
