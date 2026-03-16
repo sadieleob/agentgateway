@@ -97,6 +97,13 @@ This is the main piece. The idea is to enrich the access logs with JWT claims so
 
 ### Kubernetes (EnterpriseAgentgatewayPolicy)
 
+> **Note:** The CRD uses `spec.frontend.accessLog.attributes.add` (an array of
+> `{name, expression}` objects), not `spec.config.logging.fields.add`.
+> Integer CEL values must be wrapped with `string()` and a `default()` fallback.
+> The `has(llm)` filter is **not supported** — it causes a CEL compile panic
+> that crashes the proxy (`cel/mod.rs:229`). Omit the filter; non-LLM requests
+> simply won't populate the `llm.*` fields (they'll show `"n/a"` / `"0"`).
+
 ```yaml
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayPolicy
@@ -108,34 +115,47 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: ai-gateway
-  config:
-    logging:
-      # skip health checks and non-LLM traffic
-      filter: |
-        has(llm)
-      fields:
+  frontend:
+    accessLog:
+      attributes:
         add:
-          # who made the request
-          agent.client_id: 'jwt.sub'
-          agent.app_name: 'default(jwt.azp, "unknown")'
+          # Agent identity — from Entra service principal JWT
+          - name: agent.client_id
+            expression: 'default(jwt.sub, "unknown")'
+          - name: agent.app_name
+            expression: 'default(jwt.azp, "unknown")'
 
-          # how many tokens
-          tokens.input: 'llm.inputTokens'
-          tokens.output: 'llm.outputTokens'
-          tokens.total: 'llm.totalTokens'
-          tokens.reasoning: 'default(llm.reasoningTokens, 0)'
-          tokens.cached_input: 'default(llm.cachedInputTokens, 0)'
+          # Token consumption
+          - name: tokens.input
+            expression: 'default(string(llm.inputTokens), "n/a")'
+          - name: tokens.output
+            expression: 'default(string(llm.outputTokens), "n/a")'
+          - name: tokens.total
+            expression: 'default(string(llm.totalTokens), "n/a")'
+          - name: tokens.reasoning
+            expression: 'default(string(llm.reasoningTokens), "0")'
+          - name: tokens.cached_input
+            expression: 'default(string(llm.cachedInputTokens), "0")'
+          - name: tokens.cache_creation
+            expression: 'default(string(llm.cacheCreationInputTokens), "0")'
 
-          # what model/provider
-          model.requested: 'llm.requestModel'
-          model.actual: 'llm.responseModel'
-          model.provider: 'llm.provider'
-          model.streaming: 'llm.streaming'
+          # Model and provider
+          - name: model.requested
+            expression: 'default(llm.requestModel, "n/a")'
+          - name: model.actual
+            expression: 'default(llm.responseModel, "n/a")'
+          - name: model.provider
+            expression: 'default(llm.provider, "n/a")'
+          - name: model.streaming
+            expression: 'default(string(llm.streaming), "n/a")'
 
-          # request context
-          request.route: 'request.path'
-          request.source_ip: 'source.address'
-          request.status: 'response.code'
+          # Request metadata
+          - name: request.route
+            expression: 'request.path'
+          - name: request.source_ip
+            expression: 'source.address'
+          - name: request.status
+            expression: 'string(response.code)'
 ```
 
 ### Adding agent identity to Prometheus metrics
@@ -153,12 +173,14 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: ai-gateway
-  config:
+  frontend:
     metrics:
-      fields:
+      attributes:
         add:
-          agent_client_id: 'default(jwt.sub, "anonymous")'
-          agent_app_name: 'default(jwt.azp, "unknown")'
+          - name: agent_client_id
+            expression: 'default(jwt.sub, "anonymous")'
+          - name: agent_app_name
+            expression: 'default(jwt.azp, "unknown")'
 ```
 
 This slaps `agent_client_id` and `agent_app_name` onto `agentgateway_gen_ai_client_token_usage`, so you can group by agent in Grafana. Fair warning though, if you have a lot of unique client IDs, the label cardinality will blow up your Prometheus storage and slow down queries. Keith specifically called this out in the meeting and recommended sticking with logs for high-cardinality per-agent tracking.
