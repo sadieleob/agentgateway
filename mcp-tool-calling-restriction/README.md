@@ -163,7 +163,7 @@ They serve **different purposes** and are **not interchangeable**.
 | **Purpose** | Full MCP OAuth 2.0 flow: discovery → client registration → token validation | Token validation only — client already has a JWT |
 | **Discovery endpoints** | `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server` | None |
 | **Client registration** | Yes — proxy registers MCP clients with IdP dynamically | No — client must already have credentials |
-| **Use for** | MCP Inspector, Claude Code, VS Code (dynamic clients) | Service-to-service, pre-configured clients |
+| **Use for** | MCP Inspector, AI coding assistants, VS Code (dynamic clients) | Service-to-service, pre-configured clients |
 | **Token exchange** | Compatible (e.g., Entra → Databricks token exchange) | Compatible |
 | **Tool-level authz** | Yes — add `authorization` alongside `authentication` | No — only HTTP-level ALLOW/DENY |
 | **Target ref** | `AgentgatewayBackend` | `Gateway` or `HTTPRoute` |

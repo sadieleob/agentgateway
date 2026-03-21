@@ -81,8 +81,8 @@ Client → Gateway (agentgateway-routing-demo)
 |---------|-------|-------|----------|------|-------|
 | 1 | agent-gamma | gpt-4o-mini | openai | 200 | |
 | 2 | agent-gamma | gpt-4o-mini | openai | 200 | |
-| 3 | agent-gamma | claude-sonnet-4-20250514 | anthropic | 200* | *Timeout (backend slow), but counted |
-| 4 | agent-gamma | claude-sonnet-4-20250514 | anthropic | **429** | Global limit hit |
+| 3 | agent-gamma | sonnet-4-20250514 | anthropic | 200* | *Timeout (backend slow), but counted |
+| 4 | agent-gamma | sonnet-4-20250514 | anthropic | **429** | Global limit hit |
 
 **Redis Keys**:
 - `x-client-id^agent-gamma` = 4 — single counter across both providers
