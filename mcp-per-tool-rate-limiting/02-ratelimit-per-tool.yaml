@@ -1,0 +1,68 @@
+# Per-Tool Rate Limiting for MCP Traffic
+#
+# BLOCKED: MCP rate limiting is NOT yet implemented in AgentGateway.
+# See: https://github.com/agentgateway/agentgateway/pull/1090
+#
+# Once PR #1090 merges, this config uses mcp.tool.name (a first-class
+# CEL variable) directly in the rate limit descriptor -- no need for
+# the header extraction workaround in 01-transform-extract-tool-name.yaml.
+#
+# Descriptor tree (as seen by the rate limiter):
+#   Level 1: generic_key = agentgateway-system.per-tool-rate-limit (auto-prefix)
+#   Level 2: tool-name = <tool_name> -> rate limit applied here
+#
+# Tested: 2026-03-19 (2.3.0-beta.3)
+#   - Policy accepted and visible in config dump
+#   - MCP proxy does NOT invoke rate limiter (zero gRPC calls received)
+---
+# RateLimitConfig -- defines the per-tool bucket
+apiVersion: ratelimit.solo.io/v1alpha1
+kind: RateLimitConfig
+metadata:
+  name: per-tool-rate-limit
+  namespace: agentgateway-system
+  labels:
+    app: agentgateway
+    purpose: per-tool-rate-limiting
+spec:
+  raw:
+    descriptors:
+    - key: tool-name
+      rateLimit:
+        requestsPerUnit: 10
+        unit: MINUTE
+    rateLimits:
+    - actions:
+      - genericKey:
+          descriptorValue: placeholder
+      type: REQUEST
+---
+# EnterpriseAgentgatewayPolicy -- sends mcp.tool.name as descriptor
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: mcp-per-tool-rate-limit
+  namespace: agentgateway-system
+  labels:
+    app: agentgateway
+    purpose: per-tool-rate-limiting
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: <your-mcp-route>     # Replace with your MCP route
+  traffic:
+    rateLimit:
+      global:
+        domain: solo.io
+        backendRef:
+          kind: Service
+          name: rate-limiter-enterprise-agentgateway-combined
+          namespace: agentgateway-system
+          port: 8083
+        descriptors:
+          - entries:
+            - name: generic_key
+              expression: '"agentgateway-system.per-tool-rate-limit"'
+            - name: tool-name
+              expression: 'mcp.tool.name'

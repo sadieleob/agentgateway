@@ -1,0 +1,75 @@
+# Local Rate Limiting for MCP Traffic
+#
+# ============================================================
+# WHAT THIS DOES
+# ============================================================
+# Applies a simple token-bucket rate limit to an MCP HTTPRoute.
+# Every HTTP POST to the MCP endpoint counts as one request,
+# regardless of whether it's initialize, tools/list, or tools/call.
+#
+# ============================================================
+# HOW MCP REQUESTS MAP TO HTTP
+# ============================================================
+# MCP uses JSON-RPC over HTTP. Each client interaction is a POST:
+#
+#   Client action          | HTTP requests
+#   -----------------------|---------------
+#   Connect to server      | initialize -> 1 POST
+#   List available tools   | tools/list -> 1 POST
+#   Call a tool once       | tools/call -> 1 POST
+#   Total per session      | ~3-5 POSTs
+#
+# So a limit of "5 requests/second" does NOT mean "5 tool calls/sec".
+# It means ~1 complete tool call session per second (5 / ~5 = 1).
+# Size your limits in sessions, not raw HTTP requests.
+#
+# ============================================================
+# BURST HEADROOM
+# ============================================================
+# MCP clients fire initialize + tools/list + tools/call back-to-back
+# during session setup. Without burst capacity, the rate limit would
+# trigger before any tool actually runs. Set burst >= 5 to allow
+# at least one full session to complete.
+#
+# ============================================================
+# WHEN TO USE THIS vs GLOBAL PER-TOOL
+# ============================================================
+# Use local rate limiting when:
+#   - You want a simple per-route ceiling
+#   - All tools are equally expensive
+#   - You don't need per-tool differentiation
+#
+# Use global per-tool (02-global-per-tool-ratelimit.yaml) when:
+#   - Some tools are more expensive than others
+#   - You need different limits per tool name
+#   - You need to exclude initialize/tools/list from the count
+#
+# ============================================================
+# VALIDATED
+# ============================================================
+# Version: AgentGateway Enterprise 2.3.0-beta.4
+#
+# Test: 3 req/min, burst 0
+#   Request 1: HTTP 200 (initialize consumed 1 token)
+#   Request 2: HTTP 200 (tools/call consumed 1 token)
+#   Request 3: HTTP 429 "rate limit exceeded"
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-local-rate-limit
+  namespace: agentgateway-system
+  labels:
+    app: agentgateway
+    purpose: mcp-rate-limiting
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: <your-mcp-route>       # Replace with your MCP route
+  traffic:
+    rateLimit:
+      local:
+      - requests: 3         # 3 requests per minute
+        unit: Minutes
+        burst: 0             # No burst — easy to test with sequential curls

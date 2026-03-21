@@ -1,0 +1,57 @@
+# Databricks MCP Backend with tool-level authorization
+# Version: AgentGateway Enterprise 2.3.0-beta.4
+#
+# This adds the `authorization` block alongside the existing `authentication`
+# on a Databricks MCP backend. Adjust matchExpressions for your actual
+# clientid/aud values and Databricks Genie tool names.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: databricks-mcp-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: mcp-target
+      static:
+        host: <your-databricks-instance>.cloud.databricks.com
+        path: /api/2.0/mcp/genie/<your-genie-space-id>
+        port: 443
+  policies:
+    mcp:
+      authentication:
+        # --- Existing config (unchanged) ---
+        audiences:
+        - api://<your-app-id>
+        issuer: https://sts.windows.net/<your-tenant-id>/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-idp
+          cacheDuration: 5m
+          jwksPath: <your-tenant-id>/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://<your-gateway-host>/mcp/databricks
+          resource: https://<your-gateway-host>/mcp/databricks
+          scopesSupported:
+          - api://<your-app-id>/agentgateway
+      # --- NEW: Tool-level authorization ---
+      # Adjust these matchExpressions for your actual clientid values
+      # and the Databricks Genie tools exposed by the MCP server.
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # Allow all tools for the registered audience
+            - 'jwt.aud == "api://<your-app-id>"'
+            # Or restrict to specific tools:
+            # - 'jwt.aud == "api://<your-app-id>" && mcp.tool.name == "query_genie"'
+            # - 'jwt.aud == "api://<your-app-id>" && mcp.tool.name == "get_genie_results"'
+            #
+            # For array-valued aud claims, use `in`:
+            # - '"api://<your-app-id>" in jwt.aud'
+    tls: {}

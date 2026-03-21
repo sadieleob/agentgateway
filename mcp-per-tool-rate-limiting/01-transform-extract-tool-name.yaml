@@ -1,0 +1,54 @@
+# Extract MCP tool_name from request body using CEL transformation
+#
+# Use case: extract the tool name from MCP request body (body.params.name)
+# and set it as a header, so it can be reused for:
+#   1. HTTPRoute header-based routing rules (route by tool)
+#
+# CEL logic:
+#   - If body exists AND method == "tools/call" -> extract params.name
+#   - Otherwise -> set header to "n/a"
+#
+# Note: mcp.tool.name is only available in backend authorization CEL context,
+#       NOT in transformations. Use json(request.body) to parse instead.
+#
+# This is NOT needed for rate limiting (CEL descriptors parse the body
+# directly) or logging (proxy natively logs mcp.resource.name). It is
+# only useful when you need the tool name as an HTTP header for routing.
+#
+# IMPORTANT: For header-based routing, the transformation MUST run
+# before route matching. Use phase: PreRouting and target the Gateway
+# (not an HTTPRoute) so the header is set before HTTPRoute rules evaluate.
+#
+# Known issues with phase: PreRouting:
+#   - gloo-gateway#1615: Control plane ignored phase field in 2.1.x
+#   - agentgateway-enterprise#138: In 2.2.0-beta.1, phase propagates but
+#     data plane still doesn't execute before routing. Gateway-targeted
+#     policy also breaks header matching entirely.
+#   - Status on 2.3.0-beta.4: verify in config dump and
+#     confirm headers are set before route matching.
+#
+# Version: AgentGateway Enterprise 2.3.0-beta.4
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: mcp-tool-name-extraction
+  namespace: agentgateway-system
+  labels:
+    app: agentgateway
+    purpose: tool-name-extraction
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: <your-gateway>       # Target Gateway for PreRouting
+  traffic:
+    phase: PreRouting
+    transformation:
+      request:
+        set:
+          - name: x-tool-name
+            value: >-
+              request.body.size() > 0 && json(request.body).method == "tools/call"
+              ? json(request.body).params.name
+              : "n/a"

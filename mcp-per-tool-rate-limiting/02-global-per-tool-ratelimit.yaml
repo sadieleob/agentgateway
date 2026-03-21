@@ -1,0 +1,259 @@
+# Global Per-Tool Rate Limiting for MCP Traffic
+#
+# ============================================================
+# WHAT THIS DOES
+# ============================================================
+# Gives each MCP tool its own independent rate limit counter.
+# Expensive tools (e.g., databricks_query) get tighter limits
+# while cheap tools (e.g., echo) get higher ones. Non-tool
+# operations (initialize, tools/list) are NOT rate limited.
+#
+# ============================================================
+# HOW IT WORKS
+# ============================================================
+#
+# 1. CEL descriptors parse the JSON-RPC body on every request:
+#
+#    mcp_method descriptor:
+#      tools/call -> "tools/call"     (counted)
+#      initialize -> "other"          (NOT counted -- no matching rule)
+#      tools/list -> "other"          (NOT counted)
+#
+#    tool_name descriptor:
+#      tools/call with name="echo"   -> "echo"
+#      tools/call with name="query"  -> "query"
+#      initialize                    -> "none"
+#
+# 2. The rate limiter receives a two-key descriptor like:
+#      mcp_method=tools/call, tool_name=echo
+#    and looks up the matching rule in the ConfigMap tree.
+#
+# 3. Each tool maintains an independent counter in Redis.
+#    Exhausting the budget for tool A has no effect on tool B.
+#
+# ============================================================
+# ARCHITECTURE
+# ============================================================
+#
+#   MCP Client
+#       |
+#       v
+#   AgentGateway Proxy --- CEL parses body --- extracts mcp_method + tool_name
+#       |                                               |
+#       |                                               v
+#       |                                   gRPC ShouldRateLimit()
+#       |                                               |
+#       |                                               v
+#       |                                   envoyproxy/ratelimit <-- ConfigMap
+#       |                                               |
+#       |                                               v
+#       |                                           Redis
+#       |
+#       v (if OK)
+#   MCP Server
+#
+# ============================================================
+# WHY NOT USE THE ENTERPRISE rate-limiter-enterprise-agentgateway-* ?
+# ============================================================
+# The Enterprise rate limiter uses RateLimitConfig CRDs which
+# auto-prepend "namespace.name" as a generic_key first level.
+# The MCP CEL descriptors don't include this auto-prefix, so
+# the descriptor tree never matches.
+#
+# The standalone envoyproxy/ratelimit service with a ConfigMap
+# uses the exact descriptor keys sent by the proxy (mcp_method,
+# tool_name) without any auto-prefix transformation.
+#
+# ============================================================
+# VALIDATED
+# ============================================================
+# Version: AgentGateway Enterprise 2.3.0-beta.4
+#
+# Test: 5 tools/call per minute per tool
+#   Request 1-5: HTTP 200
+#   Request 6-8: HTTP 429
+#
+# Rate limiter log confirms:
+#   mcp_method_tools/call.tool_name.over_limit: 3
+#
+# Docs: https://agentgateway.dev/docs/kubernetes/main/mcp/rate-limit/
+
+# ============================================================
+# STEP 1: Rate Limit Service Infrastructure
+# ============================================================
+---
+# ConfigMap for the standalone Envoy rate limiter.
+# Descriptor tree:
+#   mcp_method = "tools/call"
+#     +-- tool_name = "trigger-long-running-operation" -> 3/min
+#     +-- tool_name = "sampleLLMCall"                  -> 3/min
+#     +-- tool_name = (any other tool)                  -> 10/min
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-ratelimit-config
+  namespace: agentgateway-system
+data:
+  config.yaml: |
+    domain: mcp-tools
+    descriptors:
+      - key: mcp_method
+        value: tools/call
+        descriptors:
+          # Expensive tools: tighter limits
+          - key: tool_name
+            value: trigger-long-running-operation
+            rate_limit:
+              unit: minute
+              requests_per_unit: 3
+          - key: tool_name
+            value: sampleLLMCall
+            rate_limit:
+              unit: minute
+              requests_per_unit: 3
+          # All other tool calls: default limit
+          - key: tool_name
+            rate_limit:
+              unit: minute
+              requests_per_unit: 10
+---
+# Redis for rate limit counters
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-redis
+  namespace: agentgateway-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-redis
+  template:
+    metadata:
+      labels:
+        app: mcp-redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-redis
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: mcp-redis
+  ports:
+  - port: 6379
+---
+# Standalone Envoy rate limiter (speaks the same gRPC protocol as Envoy)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-ratelimit
+  namespace: agentgateway-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-ratelimit
+  template:
+    metadata:
+      labels:
+        app: mcp-ratelimit
+    spec:
+      containers:
+      - name: ratelimit
+        image: envoyproxy/ratelimit:master
+        command: ["/bin/ratelimit"]
+        env:
+        - name: REDIS_SOCKET_TYPE
+          value: tcp
+        - name: REDIS_URL
+          value: mcp-redis:6379
+        - name: RUNTIME_ROOT
+          value: /data
+        - name: RUNTIME_SUBDIRECTORY
+          value: ratelimit
+        - name: RUNTIME_WATCH_ROOT
+          value: "false"
+        - name: USE_STATSD
+          value: "false"
+        - name: LOG_LEVEL
+          value: debug
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        - name: config
+          mountPath: /data/ratelimit/config/config.yaml
+          subPath: config.yaml
+      volumes:
+      - name: config
+        configMap:
+          name: mcp-ratelimit-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-ratelimit
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: mcp-ratelimit
+  ports:
+  - name: grpc
+    port: 8081
+    targetPort: 8081
+
+# ============================================================
+# STEP 2: AgentgatewayPolicy with CEL Descriptors
+# ============================================================
+---
+# AgentgatewayPolicy targets the MCP HTTPRoute and sends
+# two CEL-evaluated descriptors per request:
+#
+#   mcp_method:  "tools/call" or "other"
+#   tool_name:   the actual tool name or "none"
+#
+# The rate limiter matches these against the ConfigMap tree.
+# Only "tools/call" has a matching rule; "other" operations
+# (initialize, tools/list, notifications) pass through uncounted.
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-per-tool-rate-limit
+  namespace: agentgateway-system
+  labels:
+    app: agentgateway
+    purpose: mcp-per-tool-rate-limiting
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: <your-mcp-route>       # Replace with your MCP route
+  traffic:
+    rateLimit:
+      global:
+        backendRef:
+          kind: Service
+          name: mcp-ratelimit
+          port: 8081
+        domain: mcp-tools
+        descriptors:
+          - entries:
+              # Identify tools/call vs other MCP operations
+              - name: mcp_method
+                expression: |
+                  json(request.body).with(body,
+                    body.method == "tools/call" ? "tools/call" : "other"
+                  )
+              # Extract the tool name so each tool gets its own counter
+              - name: tool_name
+                expression: |
+                  json(request.body).with(body,
+                    body.method == "tools/call" ? string(body.params.name) : "none"
+                  )

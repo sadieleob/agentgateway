@@ -1,0 +1,152 @@
+# Native MCP Authorization Example
+# AgentGateway Enterprise 2.3.0-beta.4
+#
+# Scenario: Two MCP servers (github, jira), three clients (app-a, app-b, app-c)
+# - app-a: all tools on github, NO access to jira
+# - app-b: only search_repositories/get_file_contents on github, only create_issue on jira
+# - app-c: all tools on both
+#
+# Authorization is scoped per-MCP-server via separate policies targeting each HTTPRoute.
+
+---
+# --- MCP Backends ---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-github
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+      - name: github
+        static:
+          host: mcp-github-server.default.svc.cluster.local
+          port: 8085
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: mcp-jira
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+      - name: jira
+        static:
+          host: mcp-jira-server.default.svc.cluster.local
+          port: 8086
+
+---
+# --- HTTPRoutes ---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mcp-github-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - name: agentgateway
+      namespace: agentgateway-system
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp-github
+      backendRefs:
+        - name: mcp-github
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: mcp-jira-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - name: agentgateway
+      namespace: agentgateway-system
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /mcp-jira
+      backendRefs:
+        - name: mcp-jira
+          group: agentgateway.dev
+          kind: AgentgatewayBackend
+
+---
+# --- GitHub MCP Authorization Policy ---
+# app-a: all tools
+# app-b: only search_repositories, get_file_contents
+# app-c: all tools
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-github-policy
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+    - name: mcp-github-route
+      kind: HTTPRoute
+  backend:
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: "https://<idp-issuer>"
+        audiences:
+          - "app-a"
+          - "app-b"
+          - "app-c"
+        jwks:
+          backendRef:
+            name: <jwks-backend>
+            port: 443
+          jwksPath: "/.well-known/jwks.json"
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # app-a and app-c: all tools allowed on github
+            - 'jwt.aud == "app-a"'
+            - 'jwt.aud == "app-c"'
+            # app-b: only specific tools
+            - 'jwt.aud == "app-b" && mcp.tool.name == "search_repositories"'
+            - 'jwt.aud == "app-b" && mcp.tool.name == "get_file_contents"'
+
+---
+# --- Jira MCP Authorization Policy ---
+# app-a: NO access (not in audiences = 401 at authentication)
+# app-b: only create_issue
+# app-c: all tools
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: mcp-jira-policy
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+    - name: mcp-jira-route
+      kind: HTTPRoute
+  backend:
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: "https://<idp-issuer>"
+        audiences:
+          - "app-b"
+          - "app-c"
+        jwks:
+          backendRef:
+            name: <jwks-backend>
+            port: 443
+          jwksPath: "/.well-known/jwks.json"
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            # app-c: all tools
+            - 'jwt.aud == "app-c"'
+            # app-b: only create_issue
+            - 'jwt.aud == "app-b" && mcp.tool.name == "create_issue"'
