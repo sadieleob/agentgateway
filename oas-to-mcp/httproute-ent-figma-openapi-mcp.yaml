@@ -1,0 +1,23 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ent-figma-openapi-mcp
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - name: agentgateway
+  rules:
+  - backendRefs:
+    - group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayBackend
+      name: ent-figma-openapi-backend
+    matches:
+    - path:
+        type: PathPrefix
+        value: /ent/figma/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/ent/figma/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/ent/figma/openapi/mcp
