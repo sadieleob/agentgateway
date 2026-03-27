@@ -1,0 +1,699 @@
+apiVersion: v1
+data:
+  schema: '{"openapi":"3.0.3","info":{"title":"ServiceNow IT Service Management (ITSM)","description":"ServiceNow
+    IT Service Management (ITSM) is a comprehensive platform that streamlines IT service\ndelivery
+    and operations through ITIL-aligned processes and workflows. It helps organizations\nimprove
+    service quality, reduce costs, and enhance user satisfaction through intelligent\nautomation
+    and self-service capabilities.\n\nKey Features:\n- Incident management with intelligent
+    routing and prioritization\n- Problem management for root cause analysis and prevention\n-
+    Change management with risk assessment and approval workflows\n- Service request
+    fulfillment and catalog management\n- Knowledge management and self-service portals\n-
+    Service level management (SLM) and performance tracking\n- Configuration management
+    database (CMDB) for asset tracking\n- Service portfolio and catalog management\n-
+    AI-powered virtual agents and chatbots for user support\n- Mobile-first experience
+    for end users and IT staff\n- Integration with monitoring tools and third-party
+    systems\n","version":"2024.1","contact":{"name":"ServiceNow ITSM Support","url":"https://www.servicenow.com/products/itsm.html"},"termsOfService":"https://www.servicenow.com/terms-of-use.html"},"servers":[{"url":"/api","description":"ServiceNow
+    instance endpoint","variables":{"instance":{"default":"dev12345","description":"Your
+    ServiceNow instance ID"}}}],"security":[{"oauth2":["itsm:read","itsm:write"]},{"basicAuth":[]}],"paths":{"/now/table/incident":{"get":{"summary":"List
+    incidents","description":"Retrieves a list of incidents with optional filtering","operationId":"listIncidents","tags":["Incident
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results","example":"active=true^priority=1"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` array containing incident records.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"},"example":{"result":[{"sys_id":"1234567890abcdef","number":"INC0010001","short_description":"Email
+    service outage","priority":"1","state":"2","assigned_to":"admin","opened_at":"2024-01-15
+    10:30:00"}]}}}}}},"post":{"summary":"Create incident","description":"Creates a
+    new incident record","operationId":"createIncident","tags":["Incident Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/IncidentCreate"},"example":{"short_description":"Cannot
+    access corporate email","description":"Users reporting email access issues since
+    9 AM","priority":"2","category":"email","subcategory":"internal","assignment_group":"Service
+    Desk","caller_id":"681ccaf9c0a8016400b98a06818d57c7"}}}},"responses":{"201":{"description":"Created","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` object containing the record.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"}}}}}}},"/now/table/incident/{sys_id}":{"get":{"summary":"Get incident
+    details","description":"Retrieves a specific incident by sys_id","operationId":"getIncident","tags":["Incident
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Incident
+    sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` object containing the record.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"}}}}}},"put":{"summary":"Update incident","description":"Updates an incident
+    record","operationId":"updateIncident","tags":["Incident Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Incident
+    sys_id"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object"},"example":{"state":"6","close_code":"Solved
+    (Permanently)","close_notes":"Restarted email service"}}}},"responses":{"200":{"description":"Success"}}}},"/now/table/problem":{"get":{"summary":"List
+    problems","description":"Retrieves a list of problems","operationId":"listProblems","tags":["Problem
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` array containing problem records.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"}}}}}},"post":{"summary":"Create problem","description":"Creates a new
+    problem record","operationId":"createProblem","tags":["Problem Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ProblemCreate"},"example":{"short_description":"Recurring
+    email service failures","description":"Email service has failed 3 times this month","priority":"2","category":"software","subcategory":"email","assignment_group":"Infrastructure"}}}},"responses":{"201":{"description":"Created"}}}},"/now/table/problem/{sys_id}":{"get":{"summary":"Get
+    problem details","description":"Retrieves a specific problem by sys_id","operationId":"getProblem","tags":["Problem
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Problem
+    sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` object containing the problem record.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"}}}}}},"put":{"summary":"Update problem (including root cause analysis)","description":"Updates
+    a problem record, including root cause analysis fields","operationId":"updateProblem","tags":["Problem
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Problem
+    sys_id"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"root_cause":{"type":"string","description":"Root
+    cause of the problem"},"workaround":{"type":"string","description":"Temporary
+    workaround"},"permanent_fix":{"type":"string","description":"Permanent fix implementation"},"state":{"type":"string","description":"Problem
+    state"}}},"example":{"root_cause":"Email server configuration error","workaround":"Manual
+    restart of email service","permanent_fix":"Update configuration and implement
+    monitoring"}}}},"responses":{"200":{"description":"Success"}}}},"/now/table/change_request":{"get":{"summary":"List
+    change requests","description":"Retrieves a list of change requests","operationId":"listChangeRequests","tags":["Change
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results","example":"type=normal^state=assess"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"array","items":{"$ref":"#/components/schemas/ChangeRequest"}}}}}}}}},"post":{"summary":"Create
+    change request","description":"Creates a new change request","operationId":"createChangeRequest","tags":["Change
+    Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ChangeRequestCreate"},"example":{"short_description":"Upgrade
+    email server to version 2.5","description":"Planned upgrade to resolve recurring
+    issues","type":"normal","priority":"3","risk":"moderate","impact":"2","assignment_group":"CAB
+    Approval","start_date":"2024-02-01 02:00:00","end_date":"2024-02-01 06:00:00"}}}},"responses":{"201":{"description":"Created"}}}},"/now/table/change_request/{sys_id}":{"get":{"summary":"Get
+    change request details","description":"Retrieves a specific change request by
+    sys_id","operationId":"getChangeRequest","tags":["Change Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Change
+    request sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/ChangeRequest"}}}}}}}},"put":{"summary":"Update
+    change request","description":"Updates a change request record.\n\n**Note:** State
+    transitions are controlled by business rules and workflows.\nDirect state changes
+    may be blocked if they don''t follow the configured workflow.\nUse simple field
+    updates (priority, work_notes, etc.) for testing.\n","operationId":"updateChangeRequest","tags":["Change
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Change
+    request sys_id"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"work_notes":{"type":"string","description":"Work
+    notes or comments"},"priority":{"type":"string","description":"Change priority
+    (1-4)"},"risk":{"type":"string","description":"Risk level (high, medium, low)"},"description":{"type":"string","description":"Change
+    description"}}},"example":{"work_notes":"Updated after review","priority":"3","risk":"low"}}}},"responses":{"200":{"description":"Success"}}}},"/now/table/sc_request":{"get":{"summary":"List
+    service requests","description":"Retrieves a list of service catalog requests","operationId":"listServiceRequests","tags":["Service
+    Request Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"array","items":{"$ref":"#/components/schemas/ServiceRequest"}}}}}}}}},"post":{"summary":"Create
+    service request","description":"Creates a new service catalog request","operationId":"createServiceRequest","tags":["Service
+    Request Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ServiceRequestCreate"},"example":{"requested_for":"681ccaf9c0a8016400b98a06818d57c7","short_description":"New
+    laptop request","description":"Requesting MacBook Pro for new developer","cat_item":"2809952237b1300054b6a3549dbe5dd4"}}}},"responses":{"201":{"description":"Created"}}}},"/now/table/sc_request/{sys_id}":{"get":{"summary":"Get
+    service request","description":"Retrieves a specific service request by sys_id","operationId":"getServiceRequest","tags":["Service
+    Request Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Service
+    request sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/ServiceRequest"}}}}}}}}},"/now/table/sc_cat_item":{"get":{"summary":"List
+    catalog items","description":"Retrieves available service catalog items","operationId":"listCatalogItems","tags":["Service
+    Catalog"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results","example":"active=true"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"array","items":{"type":"object"}}}}}}}}}},"/now/table/sc_cat_item/{sys_id}":{"get":{"summary":"Get
+    catalog item","description":"Retrieves a specific catalog item","operationId":"getCatalogItem","tags":["Service
+    Catalog"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Catalog
+    item sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"object","properties":{"sys_id":{"type":"string"},"name":{"type":"string"},"short_description":{"type":"string"},"price":{"type":"string"},"category":{"type":"string"}}}}}}}}}}},"/now/table/kb_knowledge":{"get":{"summary":"Search
+    knowledge articles","description":"Searches the knowledge base","operationId":"searchKnowledge","tags":["Knowledge
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results","example":"workflow_state=published^short_descriptionLIKEpassword"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"array","items":{"$ref":"#/components/schemas/KnowledgeArticle"}}}}}}}}},"post":{"summary":"Create
+    knowledge article","description":"Creates a new knowledge article","operationId":"createKnowledgeArticle","tags":["Knowledge
+    Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"short_description":{"type":"string"},"text":{"type":"string"},"kb_knowledge_base":{"type":"string"},"kb_category":{"type":"string"}}}}}},"responses":{"201":{"description":"Created"}}}},"/now/table/kb_knowledge/{sys_id}":{"get":{"summary":"Get
+    knowledge article","description":"Retrieves a specific knowledge article","operationId":"getKnowledgeArticleITSM","tags":["Knowledge
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Knowledge
+    article sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/KnowledgeArticle"}}}}}}}}},"/now/globalsearch/search":{"get":{"summary":"Global
+    search","description":"Performs a global search across multiple tables","operationId":"globalSearchITSM","tags":["Knowledge
+    Management"],"parameters":[{"name":"sysparm_search","in":"query","required":true,"schema":{"type":"string"},"description":"Search
+    term","example":"password reset"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":20},"description":"Maximum
+    results to return"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"object","properties":{"groups":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"results":{"type":"array"}}}}}}}}}}}}}},"/now/table/sc_req_item":{"get":{"summary":"List
+    service request items","description":"Retrieves service request items (sc_req_item).
+    These are line items within service requests that represent\nindividual catalog
+    items ordered. Commonly referenced in approval workflows.\n\n**Common Use Cases:**\n-
+    Get items for a specific request: `request=sc_request_sys_id`\n- Get items by
+    state: `state=requested`\n- Get items for current user: `request.requested_for=javascript:gs.getUserID()`\n","operationId":"listServiceRequestItems","tags":["Service
+    Request Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results. Common filters:\n- By request: `request=<sc_request_sys_id>`\n-
+    By state: `state=requested`\n- By catalog item: `cat_item=<catalog_item_sys_id>`\n","example":"request=<sc_request_sys_id>^state=requested"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"**Optional:**
+    Comma-separated list of fields to return.\n\n**Important:** If not specified,
+    ServiceNow returns ALL fields by default. Only include this parameter if you want
+    to limit the response to specific fields.\n\nCommon fields: sys_id, request, cat_item,
+    quantity, state, short_description, description, number\n"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"array","items":{"$ref":"#/components/schemas/ServiceRequestItem"}}}}}}},"400":{"description":"Bad
+    Request - Invalid query parameters"},"401":{"description":"Unauthorized - Authentication
+    required"},"403":{"description":"Forbidden - Insufficient permissions"},"500":{"description":"Internal
+    Server Error"}}}},"/now/table/sc_req_item/{sys_id}":{"get":{"summary":"Get service
+    request item details","description":"Retrieves a specific service request item
+    by sys_id","operationId":"getServiceRequestItem","tags":["Service Request Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Service
+    request item sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/ServiceRequestItem"}}}}}},"404":{"description":"Not
+    Found - Service request item not found"},"401":{"description":"Unauthorized -
+    Authentication required"},"403":{"description":"Forbidden - Insufficient permissions"}}}},"/now/table/task":{"get":{"summary":"List
+    tasks","description":"Retrieves task records. The task table is the parent table
+    for incident, problem, change_request, sc_task, and other work records.\nUse this
+    endpoint to query across all task types or for generic task operations.\n\n**Common
+    Use Cases:**\n- Get tasks assigned to current user: `assigned_to=javascript:gs.getUserID()^active=true`\n-
+    Get tasks by state: `state=2^active=true`\n- Get tasks for a specific group: `assignment_group=<group_sys_id>^active=true`\n","operationId":"listTasks","tags":["Task
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results. Common filters:\n- By assignee: `assigned_to=javascript:gs.getUserID()`\n-
+    By state: `state=2` (2=In Progress, 3=On Hold, 4=Resolved, 7=Closed)\n- By group:
+    `assignment_group=<group_sys_id>`\n- Active only: `active=true`\n","example":"assigned_to=javascript:gs.getUserID()^active=true^state=2"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"**Optional:**
+    Comma-separated list of fields to return.\n\n**Important:** If not specified,
+    ServiceNow returns ALL fields by default. Only include this parameter if you want
+    to limit the response to specific fields.\n\nCommon fields: sys_id, number, short_description,
+    state, assigned_to, assignment_group, priority, active\n"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` array containing task records.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"}}}},"400":{"description":"Bad Request - Invalid query parameters"},"401":{"description":"Unauthorized
+    - Authentication required"},"403":{"description":"Forbidden - Insufficient permissions"},"500":{"description":"Internal
+    Server Error"}}}},"/now/table/task/{sys_id}":{"get":{"summary":"Get task details","description":"Retrieves
+    a specific task by sys_id. Tasks can be incidents, problems, change requests,
+    catalog tasks, etc.","operationId":"getTask","tags":["Task Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Task
+    sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/Task"}}}}}},"404":{"description":"Not
+    Found - Task not found"},"401":{"description":"Unauthorized - Authentication required"},"403":{"description":"Forbidden
+    - Insufficient permissions"}}}},"/now/table/sc_task":{"get":{"summary":"List catalog
+    tasks","description":"Retrieves catalog tasks (sc_task). These are fulfillment
+    tasks created from service catalog items.\nCatalog tasks are assigned to fulfillment
+    teams to complete service requests.\n\n**Common Use Cases:**\n- Get tasks for
+    a request item: `request_item=<sc_req_item_sys_id>`\n- Get tasks assigned to current
+    user: `assigned_to=javascript:gs.getUserID()^active=true`\n- Get tasks by state:
+    `state=2^active=true`\n","operationId":"listCatalogTasks","tags":["Service Request
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results. Common filters:\n- By request item: `request_item=<sc_req_item_sys_id>`\n-
+    By assignee: `assigned_to=javascript:gs.getUserID()`\n- By state: `state=2` (2=In
+    Progress, 3=On Hold, 4=Resolved, 7=Closed)\n- Active only: `active=true`\n","example":"assigned_to=javascript:gs.getUserID()^active=true^state=2"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"**Optional:**
+    Comma-separated list of fields to return.\n\n**Important:** If not specified,
+    ServiceNow returns ALL fields by default. Only include this parameter if you want
+    to limit the response to specific fields.\n\nCommon fields: sys_id, number, request_item,
+    short_description, state, assigned_to, assignment_group, priority, active\n"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` array containing catalog task records.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"}}}},"400":{"description":"Bad Request - Invalid query parameters"},"401":{"description":"Unauthorized
+    - Authentication required"},"403":{"description":"Forbidden - Insufficient permissions"},"500":{"description":"Internal
+    Server Error"}}}},"/now/table/sc_task/{sys_id}":{"get":{"summary":"Get catalog
+    task details","description":"Retrieves a specific catalog task by sys_id","operationId":"getCatalogTask","tags":["Service
+    Request Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Catalog
+    task sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/CatalogTask"}}}}}},"404":{"description":"Not
+    Found - Catalog task not found"},"401":{"description":"Unauthorized - Authentication
+    required"},"403":{"description":"Forbidden - Insufficient permissions"}}}},"/now/table/sys_user":{"get":{"summary":"Get
+    current user details","description":"Retrieves the current authenticated user''s
+    details from the sys_user table.\nUse `javascript:gs.getUserID()` in the query
+    to get the current user''s sys_id dynamically.\n\n**Common Use Cases:**\n- Get
+    current user information: `sys_id=javascript:gs.getUserID()`\n- Get user by sys_id:
+    `sys_id=<user_sys_id>`\n- Get active users: `active=true`\n- Search users by name:
+    `nameLIKE*search_term*`\n","operationId":"getCurrentUser","tags":["User Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results. Use `sys_id=javascript:gs.getUserID()` to get
+    current user.\n\nExamples:\n- Current user: `sys_id=javascript:gs.getUserID()`\n-
+    Specific user: `sys_id=<user_sys_id>`\n- Active users: `active=true`\n- Search
+    by name: `nameLIKE*search_term*`\n","example":"sys_id=javascript:gs.getUserID()"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"**Optional:**
+    Comma-separated list of fields to return.\n\n**Important:** If not specified,
+    ServiceNow returns ALL fields by default. Only include this parameter if you want
+    to limit the response to specific fields.\n\nCommon fields: sys_id, user_name,
+    name, email, first_name, last_name, active, department, location, phone\n"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success
+    - Returns user record(s)","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. Typically includes a `result` array containing user records.\nResponse
+    structure is dynamic and may include additional fields, metadata, or instance-specific
+    data.\n"},"examples":{"current_user":{"summary":"Current user details","value":{"result":[{"sys_id":"abc123def456","user_name":"john.doe","name":"John
+    Doe","email":"john.doe@example.com","first_name":"John","last_name":"Doe","active":true,"department":"IT","location":"New
+    York","phone":"+1-555-0123"}]}}}}}},"400":{"description":"Bad Request - Invalid
+    query parameters"},"401":{"description":"Unauthorized - Authentication required"},"403":{"description":"Forbidden
+    - Insufficient permissions"},"500":{"description":"Internal Server Error"}}}},"/now/table/sys_user/{sys_id}":{"get":{"summary":"Get
+    user by sys_id","description":"Retrieves a specific user record by sys_id","operationId":"getUser","tags":["User
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"User
+    sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/User"}}}}}},"404":{"description":"Not
+    Found - User not found"},"401":{"description":"Unauthorized - Authentication required"},"403":{"description":"Forbidden
+    - Insufficient permissions"}}}},"/now/table/sysapproval_approver":{"get":{"summary":"Get
+    pending approvals","description":"Retrieves approval records from the sysapproval_approver
+    table. Use this endpoint to query for pending approvals,\nfilter by approver,
+    source table, date ranges, and other criteria.\n\n**Common Use Cases:**\n- Get
+    all pending approvals for current user: `state=requested^approver=javascript:gs.getUserID()`\n-
+    Get all pending approvals for a specific approver: `state=requested^approver=<user_sys_id>`\n-
+    Get approvals for specific source tables: `source_tableINsc_req_item,change_request^state=requested`\n-
+    Get approvals within a date range: `sys_updated_onBETWEEN<start_date>@<end_date>^state=requested`\n-
+    Get active approvals: `active=true^state=requested^sysapprovalISNOTEMPTY`\n\n**Query
+    Operators:**\n- `=` equals, `!=` not equals\n- `IN` value in list (comma-separated):
+    `fieldINvalue1,value2,value3`\n- `BETWEEN` date range: `fieldBETWEENstart_date@end_date`
+    (use @ as separator, dates in format: YYYY-MM-DD HH:MM:SS or YYYY-MM-DD)\n- `>=`
+    greater than or equal, `<=` less than or equal (for dates: `sys_created_on>=2024-01-01`)\n-
+    `ISEMPTY` field is empty, `ISNOTEMPTY` field is not empty\n- `LIKE` contains (use
+    * as wildcard): `fieldLIKE*text*`\n- Combine conditions with `^` (AND): `field1=value1^field2=value2`\n\n**JavaScript
+    Expressions:**\nServiceNow REST API supports JavaScript expressions in queries.
+    Common examples:\n- `javascript:gs.getUserID()` - Get current user''s sys_id\n-
+    `javascript:gs.daysAgoStart(30)` - Get date 30 days ago\n- `javascript:gs.daysAgoEnd(7)`
+    - Get date 7 days ago (end of day)\nThese expressions are evaluated server-side
+    by ServiceNow.\n\n**Important Fields for Filtering:**\n- `state`: Approval state
+    (requested, approved, rejected, cancelled)\n- `approver`: Sys_id of the approver
+    user\n- `source_table`: Table name of the source record (e.g., sc_req_item, change_request)\n-
+    `document_id`: Sys_id of the document requiring approval\n- `sysapproval`: Reference
+    to the sysapproval record\n- `active`: Whether the approval record is active (true/false)\n-
+    `sys_created_on`, `sys_updated_on`: Timestamps for date range queries\n","operationId":"getPendingApprovals","tags":["Approval
+    Management"],"parameters":[{"name":"sysparm_query","in":"query","schema":{"type":"string"},"description":"Encoded
+    query string to filter results. Use ServiceNow query syntax with operators like
+    =, IN, BETWEEN, ISNOTEMPTY.\nCombine multiple conditions with ^ (AND operator).\n\nExamples:\n-
+    Current user pending approvals: `state=requested^approver=javascript:gs.getUserID()`\n-
+    Simple: `state=requested^approver=<user_sys_id>`\n- Multiple tables: `source_tableINsc_req_item,change_request^state=requested^active=true`\n-
+    Date range: `sys_updated_onBETWEEN2024-01-01 00:00:00@2024-01-31 23:59:59^state=requested`\n-
+    Complex (matches Moveworks pattern): `source_tableINsc_req_item,change_request^state=requested^active=true^sysapprovalISNOTEMPTY^sys_updated_onBETWEEN2024-01-01@2024-01-31`\n-
+    Recent approvals: `sys_created_on>=2024-01-01^state=requested` (for approvals
+    created after a date)\n- With JavaScript date: `sys_created_on>=javascript:gs.daysAgoStart(30)^state=requested`\n\n**Note:**
+    \n- Use `javascript:gs.getUserID()` to get current user''s sys_id dynamically\n-
+    Replace `<user_sys_id>` with actual sys_id for specific users\n- For date ranges,
+    use format YYYY-MM-DD or YYYY-MM-DD HH:MM:SS, or JavaScript expressions like `javascript:gs.daysAgoStart(30)`\n","example":"state=requested^approver=javascript:gs.getUserID()"},{"name":"sysparm_limit","in":"query","schema":{"type":"integer","default":10},"description":"Maximum
+    number of records to return"},{"name":"sysparm_offset","in":"query","schema":{"type":"integer","default":0},"description":"Number
+    of records to skip"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"**Optional:**
+    Comma-separated list of fields to return. \n\n**Important:** If not specified,
+    ServiceNow returns ALL fields by default. Only include this parameter if you want
+    to limit the response to specific fields.\n\nCommon fields: sys_id, sysapproval,
+    document_id, state, approver, comments, source_table, source_id, due_date, requested_by,
+    requested_date, sys_created_on, sys_updated_on, active, number\n"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"},{"name":"sysparm_suppress_pagination_header","in":"query","schema":{"type":"boolean"},"description":"Suppress
+    pagination header in the response"}],"responses":{"200":{"description":"Success
+    - Returns array of approval records matching the query","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"description":"ServiceNow
+    API response. The response structure is dynamic and may include:\n- `result`:
+    Array of approval records (when querying multiple records)\n- Additional metadata
+    fields\n- Instance-specific custom fields\n- Pagination information (if sysparm_suppress_pagination_header=false)\n\n**Note:**
+    The actual response structure may vary based on:\n- Instance configuration\n-
+    Custom fields and plugins\n- sysparm_display_value setting\n- sysparm_fields parameter\n\nThis
+    schema allows all fields to pass through without restriction.\n"},"examples":{"pending_approvals_with_display_values":{"summary":"Pending
+    approvals with display values (sysparm_display_value=all)","value":{"result":[{"approver":{"display_value":"John
+    Doe (jdoe)","link":"https://instance.service-now.com/api/now/table/sys_user/abc123def456ghi789","value":"abc123def456ghi789"},"sys_id":{"display_value":"xyz789abc123def456","value":"xyz789abc123def456"},"comments":{"display_value":"","value":""},"sysapproval":{"display_value":"RITM0010001","link":"https://instance.service-now.com/api/now/table/task/def456ghi789jkl012","value":"def456ghi789jkl012"},"sys_created_on":{"display_value":"2024-01-15
+    09:40:06","value":"2024-01-15 17:40:06"},"due_date":{"display_value":"2024-02-15
+    09:39:53","value":"2024-02-15 17:39:53"},"state":{"display_value":"Requested","value":"requested"},"document_id":{"display_value":"Requested
+    Item: RITM0010001","link":"https://instance.service-now.com/api/now/table/sc_req_item/def456ghi789jkl012","value":"def456ghi789jkl012"},"source_table":{"display_value":"sc_req_item","value":"sc_req_item"}}]}},"pending_approvals_simple":{"summary":"Pending
+    approvals with actual values only (sysparm_display_value=false)","value":{"result":[{"sys_id":"xyz789abc123def456","sysapproval":"def456ghi789jkl012","document_id":"def456ghi789jkl012","state":"requested","approver":"abc123def456ghi789","source_table":"sc_req_item","source_id":"def456ghi789jkl012","comments":"","due_date":"2024-02-15
+    17:39:53","requested_by":"user_sys_id_001","requested_date":"2024-01-15 17:40:06","active":true}]}}}}}},"400":{"description":"Bad
+    Request - Invalid query parameters"},"401":{"description":"Unauthorized - Authentication
+    required"},"403":{"description":"Forbidden - Insufficient permissions"},"500":{"description":"Internal
+    Server Error"}}}},"/now/table/sysapproval_approver/{sys_id}":{"get":{"summary":"Get
+    approval details","description":"Retrieves a specific approval record by sys_id","operationId":"getApproval","tags":["Approval
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Approval
+    sys_id"},{"name":"sysparm_fields","in":"query","schema":{"type":"string"},"description":"Comma-separated
+    list of fields to return"},{"name":"sysparm_display_value","in":"query","schema":{"type":"string","enum":["true","false","all"],"default":"all"},"description":"Return
+    display values (true), actual values (false), or both (all). Defaults to ''all''
+    to return both display values and actual values (sys_ids) for all fields."},{"name":"sysparm_exclude_reference_link","in":"query","schema":{"type":"boolean"},"description":"Exclude
+    reference links from the response"},{"name":"sysparm_view","in":"query","schema":{"type":"string"},"description":"Specify
+    a view to use for the query"}],"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/Approval"}}}}}},"404":{"description":"Not
+    Found - Approval record not found"},"401":{"description":"Unauthorized - Authentication
+    required"},"403":{"description":"Forbidden - Insufficient permissions"}}},"put":{"summary":"Update
+    approval (approve/reject)","description":"Updates an approval record to approve
+    or reject an approval request. This is the primary endpoint for\nprocessing approvals
+    programmatically.\n\n**Use Cases:**\n- Approve a pending approval: Set `state`
+    to \"approved\" with optional `comments`\n- Reject a pending approval: Set `state`
+    to \"rejected\" with optional `comments` explaining the rejection\n- Cancel an
+    approval: Set `state` to \"cancelled\"\n\n**Request Format:**\n- Content-Type:
+    `application/json` (preferred) or `application/x-www-form-urlencoded`\n- For JSON:
+    Send `{\"state\": \"approved\", \"comments\": \"...\"}`\n- For form data: Send
+    `state=approved&comments=...`\n\n**Important Notes:**\n- The `state` field must
+    not be read-only at the dictionary level\n- Access Control Lists (ACLs) may restrict
+    who can update approval records\n- Only the assigned approver (or users with appropriate
+    permissions) can update the approval\n- State transitions are validated by ServiceNow
+    business rules\n- Updating the state triggers workflow notifications and updates
+    the parent record (e.g., change request)\n\n**Required Fields:**\n- `state`: Must
+    be one of: \"requested\", \"approved\", \"rejected\", \"cancelled\"\n\n**Optional
+    Fields:**\n- `comments`: Comments or reason for the approval decision (recommended
+    for audit trail)\n","operationId":"updateApproval","tags":["Approval Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    sys_id of the approval record to update (obtained from GET /now/table/sysapproval_approver)"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["state"],"properties":{"state":{"type":"string","enum":["requested","approved","rejected","cancelled"],"description":"Approval
+    state - set to ''approved'' to approve, ''rejected'' to reject, or ''cancelled''
+    to cancel"},"comments":{"type":"string","description":"Comments or reason for
+    approval/rejection (recommended for audit trail)"}}},"examples":{"approve":{"summary":"Approve
+    the request","value":{"state":"approved","comments":"Approved after review"}},"approve_minimal":{"summary":"Approve
+    without comments","value":{"state":"approved"}},"reject":{"summary":"Reject the
+    request","value":{"state":"rejected","comments":"Rejected - missing required documentation"}}}},"application/x-www-form-urlencoded":{"schema":{"type":"object","required":["state"],"properties":{"state":{"type":"string","enum":["requested","approved","rejected","cancelled"]},"comments":{"type":"string"}}},"example":"state=approved&comments=Approved
+    after review"}}},"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/Approval"}}}}}},"400":{"description":"Bad
+    Request - Invalid request body or state transition not allowed"},"401":{"description":"Unauthorized
+    - Authentication required"},"403":{"description":"Forbidden - Insufficient permissions
+    or ACL restrictions"},"404":{"description":"Not Found - Approval record not found"},"500":{"description":"Internal
+    Server Error"}}},"patch":{"summary":"Partially update approval","description":"Partially
+    updates an approval record using PATCH method.\nThis is an alternative to PUT
+    that allows partial updates.\n\n**Note:** Same restrictions apply as PUT endpoint
+    regarding ACLs and read-only fields.\n","operationId":"patchApproval","tags":["Approval
+    Management"],"parameters":[{"name":"sys_id","in":"path","required":true,"schema":{"type":"string"},"description":"Approval
+    sys_id"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"state":{"type":"string","enum":["requested","approved","rejected","cancelled"],"description":"Approval
+    state"},"comments":{"type":"string","description":"Comments or reason for approval/rejection"}}},"example":{"state":"approved","comments":"Approved
+    via API"}}}},"responses":{"200":{"description":"Success","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/Approval"}}}}}},"400":{"description":"Bad
+    Request - Invalid request body"},"401":{"description":"Unauthorized - Authentication
+    required"},"403":{"description":"Forbidden - Insufficient permissions"},"404":{"description":"Not
+    Found - Approval record not found"}}}},"/sn_chg_rest/change/normal":{"post":{"summary":"Create
+    normal change","description":"Creates a normal change request with validation
+    using Change Management REST API","operationId":"createNormalChange","tags":["Change
+    Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"short_description":{"type":"string"},"description":{"type":"string"},"assignment_group":{"type":"string"},"risk_impact_analysis":{"type":"string"},"implementation_plan":{"type":"string"},"backout_plan":{"type":"string"},"test_plan":{"type":"string"}}}}}},"responses":{"200":{"description":"Success
+    (Note: Returns 200, not 201)","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"$ref":"#/components/schemas/ChangeRequest"}}}}}}}}},"/now/table/em_event":{"post":{"summary":"Create
+    event","description":"Creates an event in Event Management system.\n\n**Note:**
+    This endpoint requires the Event Management plugin to be enabled.\nPlugin ID:
+    com.snc.event-management\n\nIf the plugin is not enabled, this endpoint will return
+    400 with error:\n\"Invalid table em_event\"\n","operationId":"createEvent","tags":["Event
+    Management"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["source","node","type","severity","resource","message_key"],"properties":{"source":{"type":"string","description":"Event
+    source system (e.g., Nagios, Zabbix, Datadog)"},"node":{"type":"string","description":"CI
+    name or identifier"},"type":{"type":"string","description":"Event type/category"},"severity":{"type":"string","enum":["0","1","2","3","4","5"],"description":"Event
+    severity level (0=Clear, 1=Critical, 2=Major, 3=Minor, 4=Warning, 5=Info)"},"resource":{"type":"string","description":"Resource
+    identifier"},"message_key":{"type":"string","description":"Unique message key
+    for event correlation"},"description":{"type":"string","description":"Event description"},"metric_name":{"type":"string","description":"Metric
+    name (e.g., cpu_usage, disk_space)"}}},"example":{"source":"Nagios","node":"mail-server-01","type":"disk_space","severity":"2","resource":"mail-server-01","message_key":"mail-server-01_disk_space","description":"Disk
+    space usage above 90%","metric_name":"disk_usage"}}}},"responses":{"201":{"description":"Event
+    created successfully","content":{"application/json":{"schema":{"type":"object","additionalProperties":true,"properties":{"result":{"type":"object","properties":{"sys_id":{"type":"string"},"number":{"type":"string"},"state":{"type":"string"}}}}}}}},"400":{"description":"Bad
+    Request or Plugin Not Enabled","content":{"application/json":{"schema":{"type":"object","properties":{"error":{"type":"object","properties":{"message":{"type":"string"},"detail":{"type":"string"}}},"status":{"type":"string"}}}}}}}}}},"components":{"securitySchemes":{"oauth2":{"type":"oauth2","flows":{"clientCredentials":{"tokenUrl":"https://{instance}.service-now.com/oauth_token.do","scopes":{"itsm:read":"Read
+    access to ITSM data","itsm:write":"Write access to ITSM data","itsm:admin":"Administrative
+    access to ITSM"}}}},"basicAuth":{"type":"http","scheme":"basic"}},"schemas":{"ReferenceField":{"type":"object","description":"Reference
+    field structure when sysparm_display_value=all or true.\nReference fields (like
+    approver, document_id, sysapproval) return objects with:\n- display_value: Human-readable
+    display value\n- value: Actual sys_id value\n- link: API URL to the referenced
+    record (if sysparm_exclude_reference_link=false)\n","properties":{"display_value":{"type":"string","description":"Human-readable
+    display value"},"value":{"type":"string","description":"Actual sys_id value"},"link":{"type":"string","format":"uri","description":"API
+    URL to the referenced record (only present if sysparm_exclude_reference_link=false)"}},"example":{"display_value":"John
+    Doe (jdoe)","value":"abc123def456ghi789","link":"https://instance.service-now.com/api/now/table/sys_user/abc123def456ghi789"}},"Incident":{"type":"object","additionalProperties":true,"description":"Incident
+    record. ServiceNow may return additional fields not listed here.\nThe API response
+    is dynamic and may include custom fields, plugin fields, or instance-specific
+    metadata.\n","properties":{"sys_id":{"type":"string"},"number":{"type":"string"},"short_description":{"type":"string"},"description":{"type":"string"},"priority":{"type":"string","enum":["1","2","3","4","5"]},"state":{"type":"string","enum":["1","2","3","6","7","8"]},"category":{"type":"string"},"subcategory":{"type":"string"},"assigned_to":{"type":"string"},"assignment_group":{"type":"string"},"opened_at":{"type":"string","format":"date-time"},"resolved_at":{"type":"string","format":"date-time"},"close_code":{"type":"string"},"close_notes":{"type":"string"}}},"IncidentCreate":{"type":"object","required":["short_description"],"properties":{"short_description":{"type":"string"},"description":{"type":"string"},"priority":{"type":"string","enum":["1","2","3","4","5"]},"category":{"type":"string"},"subcategory":{"type":"string"},"assignment_group":{"type":"string"},"caller_id":{"type":"string"}}},"Problem":{"type":"object","additionalProperties":true,"description":"Problem
+    record. ServiceNow may return additional fields not listed here.\nThe API response
+    is dynamic and may include custom fields, plugin fields, or instance-specific
+    metadata.\n","properties":{"sys_id":{"type":"string"},"number":{"type":"string"},"short_description":{"type":"string"},"description":{"type":"string"},"priority":{"type":"string"},"state":{"type":"string"},"category":{"type":"string"},"root_cause":{"type":"string"},"workaround":{"type":"string"}}},"ProblemCreate":{"type":"object","required":["short_description"],"properties":{"short_description":{"type":"string"},"description":{"type":"string"},"priority":{"type":"string"},"category":{"type":"string"},"subcategory":{"type":"string"},"assignment_group":{"type":"string"}}},"ChangeRequest":{"type":"object","additionalProperties":true,"description":"Change
+    request record. ServiceNow may return additional fields not listed here.\nThe
+    API response is dynamic and may include custom fields, plugin fields, or instance-specific
+    metadata.\n","properties":{"sys_id":{"type":"string"},"number":{"type":"string"},"short_description":{"type":"string"},"description":{"type":"string"},"type":{"type":"string","enum":["normal","standard","emergency"]},"state":{"type":"string"},"priority":{"type":"string"},"risk":{"type":"string"},"impact":{"type":"string"},"assignment_group":{"type":"string"},"start_date":{"type":"string","format":"date-time"},"end_date":{"type":"string","format":"date-time"}}},"ChangeRequestCreate":{"type":"object","required":["short_description","type"],"properties":{"short_description":{"type":"string"},"description":{"type":"string"},"type":{"type":"string","enum":["normal","standard","emergency"]},"priority":{"type":"string"},"risk":{"type":"string"},"impact":{"type":"string"},"assignment_group":{"type":"string"},"start_date":{"type":"string","format":"date-time"},"end_date":{"type":"string","format":"date-time"}}},"ServiceRequest":{"type":"object","additionalProperties":true,"description":"Service
+    request record. ServiceNow may return additional fields not listed here.\nThe
+    API response is dynamic and may include custom fields, plugin fields, or instance-specific
+    metadata.\n","properties":{"sys_id":{"type":"string"},"number":{"type":"string"},"short_description":{"type":"string"},"description":{"type":"string"},"state":{"type":"string"},"requested_for":{"type":"string"},"cat_item":{"type":"string"},"opened_at":{"type":"string","format":"date-time"}}},"ServiceRequestCreate":{"type":"object","required":["requested_for","cat_item"],"properties":{"requested_for":{"type":"string"},"short_description":{"type":"string"},"description":{"type":"string"},"cat_item":{"type":"string"}}},"KnowledgeArticle":{"type":"object","additionalProperties":true,"description":"Knowledge
+    article record. ServiceNow may return additional fields not listed here.\nThe
+    API response is dynamic and may include custom fields, plugin fields, or instance-specific
+    metadata.\n","properties":{"sys_id":{"type":"string"},"number":{"type":"string"},"short_description":{"type":"string"},"text":{"type":"string"},"kb_knowledge_base":{"type":"string"},"kb_category":{"type":"string"},"workflow_state":{"type":"string"},"valid_to":{"type":"string","format":"date-time"}}},"Approval":{"type":"object","additionalProperties":true,"description":"Approval
+    record from the sysapproval_approver table. Represents a single approval request\nthat
+    needs to be approved or rejected by an approver.\n\n**Response Structure:**\n-
+    When `sysparm_display_value=false`: Fields return simple string values (sys_ids)\n-
+    When `sysparm_display_value=all` or `true`: Reference fields return objects with
+    `display_value`, `value`, and `link` properties\n\n**Important:** ServiceNow may
+    return additional fields not listed here. The API response is dynamic and may
+    include:\n- Custom fields specific to your instance\n- Fields added by plugins
+    or customizations\n- Instance-specific metadata fields\n\n**Key Fields for Tool
+    Calls:**\n- `sys_id`: Use this to update the approval via PUT/PATCH endpoints
+    (always a string, even with display_value=all)\n- `state`: Current approval state
+    - filter by \"requested\" to find pending approvals\n- `approver`: Filter by this
+    to find approvals assigned to a specific user\n- `source_table`: Filter by table
+    name (e.g., \"change_request\", \"sc_req_item\") to find approvals for specific
+    record types\n- `document_id` or `source_id`: Reference to the parent record requiring
+    approval\n- `sysapproval`: Reference to the sysapproval record (should not be
+    empty for valid approvals)\n","properties":{"sys_id":{"oneOf":[{"type":"string","description":"Unique
+    identifier (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Object
+    with display_value and value (when sysparm_display_value=all or true)"}],"description":"Unique
+    identifier of the approval record - REQUIRED for PUT/PATCH operations. Use the
+    ''value'' property if it''s an object."},"sysapproval":{"oneOf":[{"type":"string","description":"Sys_id
+    of the sysapproval record (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object with display_value, value, and link (when sysparm_display_value=all or
+    true)"}],"description":"Reference to the sysapproval record. Use ISNOTEMPTY in
+    queries to filter valid approvals"},"document_id":{"oneOf":[{"type":"string","description":"Sys_id
+    of the document requiring approval (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object with display_value, value, and link (when sysparm_display_value=all or
+    true)"}],"description":"Reference to the document requiring approval (e.g., change
+    request sys_id, service request item sys_id)"},"state":{"oneOf":[{"type":"string","enum":["requested","approved","rejected","cancelled"],"description":"Approval
+    state as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"Requested"},"value":{"type":"string","enum":["requested","approved","rejected","cancelled"]}},"description":"State
+    object with display_value and value (when sysparm_display_value=all or true)"}],"description":"Approval
+    state:\n- \"requested\": Pending approval (use this to find approvals that need
+    action)\n- \"approved\": Approval has been approved\n- \"rejected\": Approval
+    has been rejected\n- \"cancelled\": Approval has been cancelled\n"},"approver":{"oneOf":[{"type":"string","description":"Sys_id
+    of the approver user (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object with display_value, value, and link (when sysparm_display_value=all or
+    true)"}],"description":"User who is the approver. Filter by this field to find
+    approvals assigned to a specific user"},"comments":{"oneOf":[{"type":"string","description":"Comments
+    as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Comments
+    object with display_value and value (when sysparm_display_value=all or true)"}],"description":"Comments
+    or reason for approval/rejection. Can be set when updating approval state"},"due_date":{"oneOf":[{"type":"string","format":"date-time","description":"Due
+    date as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"2024-02-15
+    09:39:53"},"value":{"type":"string","format":"date-time","example":"2024-02-15
+    17:39:53"}},"description":"Due date object with display_value and value (when
+    sysparm_display_value=all or true)"}],"description":"Due date for the approval
+    decision"},"requested_by":{"oneOf":[{"type":"string","description":"Sys_id of
+    the requester (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}],"description":"User who requested
+    the approval"},"requested_date":{"type":"string","format":"date-time","description":"Date
+    when the approval was requested"},"sys_created_on":{"oneOf":[{"type":"string","format":"date-time","description":"Created
+    timestamp as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"2024-01-15
+    09:40:06"},"value":{"type":"string","format":"date-time","example":"2024-01-15
+    17:40:06"}},"description":"Created timestamp object (when sysparm_display_value=all
+    or true)"}],"description":"System timestamp when the record was created. Use for
+    date range queries (e.g., approvals created in last 30 days)"},"sys_updated_on":{"oneOf":[{"type":"string","format":"date-time","description":"Updated
+    timestamp as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"2024-01-15
+    09:40:06"},"value":{"type":"string","format":"date-time","example":"2024-01-15
+    17:40:06"}},"description":"Updated timestamp object (when sysparm_display_value=all
+    or true)"}],"description":"System timestamp when the record was last updated.
+    Use BETWEEN operator for date range queries"},"sys_created_by":{"oneOf":[{"type":"string","description":"Sys_id
+    or username of the user who created the record (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"jdoe"},"value":{"type":"string","example":"jdoe"}},"description":"Created
+    by object with display_value and value (when sysparm_display_value=all or true)"}],"description":"User
+    who created the record"},"sys_updated_by":{"oneOf":[{"type":"string","description":"Sys_id
+    or username of the user who last updated the record (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"jdoe"},"value":{"type":"string","example":"jdoe"}},"description":"Updated
+    by object with display_value and value (when sysparm_display_value=all or true)"}],"description":"User
+    who last updated the record"},"number":{"oneOf":[{"type":"string","description":"Display
+    number as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Number
+    object (when sysparm_display_value=all or true)"}],"description":"Display number
+    of the approval record (human-readable identifier)"},"source_table":{"oneOf":[{"type":"string","description":"Table
+    name as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"sc_req_item"},"value":{"type":"string","example":"sc_req_item"}},"description":"Table
+    name object (when sysparm_display_value=all or true)"}],"description":"Table name
+    of the source record requiring approval. Common values:\n- \"change_request\":
+    Change management requests\n- \"sc_req_item\": Service catalog request items\n-
+    Use IN operator to filter multiple tables: source_tableINchange_request,sc_req_item\n"},"source_id":{"oneOf":[{"type":"string","description":"Sys_id
+    of the source record (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}],"description":"Sys_id of the
+    source record requiring approval (same as document_id in many cases)"},"active":{"oneOf":[{"type":"boolean","description":"Active
+    status as boolean (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"true"},"value":{"type":"boolean","example":true}},"description":"Active
+    status object (when sysparm_display_value=all or true)"}],"description":"Whether
+    the approval record is active. Filter by active=true to get only active approvals"},"approval_reason":{"oneOf":[{"type":"string","description":"Approval
+    reason as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Approval
+    reason object (when sysparm_display_value=all or true)"}],"description":"Reason
+    for the approval"},"register_name":{"oneOf":[{"type":"string","description":"Register
+    name as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Register
+    name object (when sysparm_display_value=all or true)"}],"description":"Register
+    name for the approval"},"approval_journal_column":{"oneOf":[{"type":"string","description":"Approval
+    journal column as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"approval_history"},"value":{"type":"string","example":"approval_history"}},"description":"Approval
+    journal column object (when sysparm_display_value=all or true)"}],"description":"Journal
+    column name for approval history"},"iteration":{"oneOf":[{"type":"string","description":"Iteration
+    number as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"1"},"value":{"type":"string","example":"1"}},"description":"Iteration
+    object (when sysparm_display_value=all or true)"}],"description":"Iteration number
+    of the approval"},"approval_source":{"oneOf":[{"type":"string","description":"Approval
+    source as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","nullable":true},"value":{"type":"string"}},"description":"Approval
+    source object (when sysparm_display_value=all or true)"}],"description":"Source
+    of the approval"},"group":{"oneOf":[{"type":"string","description":"Group as string
+    (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Group
+    object (when sysparm_display_value=all or true)"}],"description":"Group associated
+    with the approval"},"order":{"oneOf":[{"type":"string","description":"Order as
+    string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Order
+    object (when sysparm_display_value=all or true)"}],"description":"Order field
+    for approval sequencing"},"sys_mod_count":{"oneOf":[{"type":"string","description":"Modification
+    count as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"0"},"value":{"type":"string","example":"0"}},"description":"Modification
+    count object (when sysparm_display_value=all or true)"}],"description":"Number
+    of times the record has been modified"},"sn_grc_appr_approval":{"oneOf":[{"type":"string","description":"GRC
+    approval reference as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"GRC
+    approval object (when sysparm_display_value=all or true)"}],"description":"GRC
+    (Governance, Risk, and Compliance) approval reference"},"approval_column":{"oneOf":[{"type":"string","description":"Approval
+    column as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"approval"},"value":{"type":"string","example":"approval"}},"description":"Approval
+    column object (when sysparm_display_value=all or true)"}],"description":"Column
+    name for the approval field"},"sys_tags":{"oneOf":[{"type":"string","description":"Tags
+    as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Tags
+    object (when sysparm_display_value=all or true)"}],"description":"Tags associated
+    with the approval record"},"expected_start":{"oneOf":[{"type":"string","format":"date-time","description":"Expected
+    start date as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string","example":"2024-01-15
+    09:40:06"},"value":{"type":"string","format":"date-time","example":"2024-01-15
+    17:40:06"}},"description":"Expected start date object (when sysparm_display_value=all
+    or true)"}],"description":"Expected start date/time for the approval"},"register_email":{"oneOf":[{"type":"string","description":"Register
+    email as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Register
+    email object (when sysparm_display_value=all or true)"}],"description":"Email
+    address for registration"},"register_account":{"oneOf":[{"type":"string","description":"Register
+    account as string (when sysparm_display_value=false)"},{"type":"object","properties":{"display_value":{"type":"string"},"value":{"type":"string"}},"description":"Register
+    account object (when sysparm_display_value=all or true)"}],"description":"Account
+    for registration"}}},"User":{"type":"object","additionalProperties":true,"description":"User
+    record from the sys_user table. Represents a ServiceNow user account.\n\n**Important:**
+    ServiceNow may return additional fields not listed here. The API response is dynamic
+    and may include:\n- Custom user fields specific to your instance\n- Fields added
+    by plugins or customizations\n- Instance-specific metadata fields\n\n**Key Fields
+    for Tool Calls:**\n- `sys_id`: Unique identifier - use `javascript:gs.getUserID()`
+    in queries to get current user\n- `user_name`: Login username\n- `name`: Full
+    display name\n- `email`: Email address\n- `active`: Whether the user account is
+    active\n","properties":{"sys_id":{"type":"string","description":"Unique identifier
+    of the user record"},"user_name":{"type":"string","description":"Login username
+    for the user"},"name":{"type":"string","description":"Full display name of the
+    user"},"email":{"type":"string","format":"email","description":"Email address
+    of the user"},"first_name":{"type":"string","description":"First name of the user"},"last_name":{"type":"string","description":"Last
+    name of the user"},"active":{"type":"boolean","description":"Whether the user
+    account is active"},"department":{"type":"string","description":"Department the
+    user belongs to"},"location":{"type":"string","description":"Location of the user"},"phone":{"type":"string","description":"Phone
+    number of the user"},"title":{"type":"string","description":"Job title of the
+    user"},"manager":{"type":"string","description":"Sys_id of the user''s manager"},"sys_created_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was created"},"sys_updated_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was last updated"}}},"ServiceRequestItem":{"type":"object","additionalProperties":true,"description":"Service
+    request item (sc_req_item) record. Represents a line item within a service request.\nEach
+    item corresponds to a catalog item that was ordered.\n\n**Note:** When sysparm_display_value=all
+    or true, reference fields (request, cat_item, etc.) \nreturn objects with display_value,
+    value, and link properties. See ReferenceField schema.\n\n**Important:** ServiceNow
+    may return additional fields not listed here. The API response is dynamic.\n","properties":{"sys_id":{"type":"string","description":"Unique
+    identifier of the service request item"},"number":{"type":"string","description":"Display
+    number of the request item (e.g., RITM0010001)"},"request":{"oneOf":[{"type":"string","description":"Sys_id
+    of the parent service request (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"cat_item":{"oneOf":[{"type":"string","description":"Sys_id
+    of the catalog item (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"quantity":{"type":"string","description":"Quantity
+    ordered"},"state":{"type":"string","description":"State of the request item"},"short_description":{"type":"string","description":"Short
+    description of the item"},"description":{"type":"string","description":"Detailed
+    description"},"price":{"type":"string","description":"Price of the item"},"active":{"type":"boolean","description":"Whether
+    the item is active"},"sys_created_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was created"},"sys_updated_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was last updated"}}},"Task":{"type":"object","additionalProperties":true,"description":"Task
+    record. The task table is the parent table for incident, problem, change_request,
+    sc_task, and other work records.\nUse this schema for generic task operations
+    or when querying across task types.\n\n**Note:** When sysparm_display_value=all
+    or true, reference fields (assigned_to, assignment_group, etc.) \nreturn objects
+    with display_value, value, and link properties. See ReferenceField schema.\n\n**Important:**
+    ServiceNow may return additional fields not listed here. The API response is dynamic.\n","properties":{"sys_id":{"type":"string","description":"Unique
+    identifier of the task"},"number":{"type":"string","description":"Display number
+    of the task"},"short_description":{"type":"string","description":"Short description
+    of the task"},"description":{"type":"string","description":"Detailed description"},"state":{"type":"string","description":"Task
+    state (1=New, 2=In Progress, 3=On Hold, 4=Resolved, 7=Closed)"},"priority":{"type":"string","description":"Task
+    priority (1=Critical, 2=High, 3=Moderate, 4=Low, 5=Planning)"},"assigned_to":{"oneOf":[{"type":"string","description":"Sys_id
+    of assigned user (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"assignment_group":{"oneOf":[{"type":"string","description":"Sys_id
+    of assignment group (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"active":{"type":"boolean","description":"Whether
+    the task is active"},"sys_created_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was created"},"sys_updated_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was last updated"}}},"CatalogTask":{"type":"object","additionalProperties":true,"description":"Catalog
+    task (sc_task) record. These are fulfillment tasks created from service catalog
+    items.\nCatalog tasks are assigned to fulfillment teams to complete service requests.\n\n**Note:**
+    When sysparm_display_value=all or true, reference fields (request_item, assigned_to,
+    etc.) \nreturn objects with display_value, value, and link properties. See ReferenceField
+    schema.\n\n**Important:** ServiceNow may return additional fields not listed here.
+    The API response is dynamic.\n","properties":{"sys_id":{"type":"string","description":"Unique
+    identifier of the catalog task"},"number":{"type":"string","description":"Display
+    number of the catalog task"},"request_item":{"oneOf":[{"type":"string","description":"Sys_id
+    of the service request item (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"short_description":{"type":"string","description":"Short
+    description of the task"},"description":{"type":"string","description":"Detailed
+    description"},"state":{"type":"string","description":"Task state (1=New, 2=In
+    Progress, 3=On Hold, 4=Resolved, 7=Closed)"},"priority":{"type":"string","description":"Task
+    priority"},"assigned_to":{"oneOf":[{"type":"string","description":"Sys_id of assigned
+    user (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"assignment_group":{"oneOf":[{"type":"string","description":"Sys_id
+    of assignment group (when sysparm_display_value=false)"},{"$ref":"#/components/schemas/ReferenceField","description":"Reference
+    object (when sysparm_display_value=all or true)"}]},"active":{"type":"boolean","description":"Whether
+    the task is active"},"sys_created_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was created"},"sys_updated_on":{"type":"string","format":"date-time","description":"System
+    timestamp when the record was last updated"}}}}},"tags":[{"name":"Incident Management","description":"Manage
+    and resolve IT incidents"},{"name":"Problem Management","description":"Identify
+    and resolve root causes of incidents"},{"name":"Change Management","description":"Control
+    the lifecycle of all changes"},{"name":"Service Request Management","description":"Handle
+    service catalog requests"},{"name":"Service Catalog","description":"Browse and
+    order IT services"},{"name":"Knowledge Management","description":"Create and search
+    knowledge articles"},{"name":"Approval Management","description":"Manage approval
+    workflows"},{"name":"Event Management","description":"Process events from monitoring
+    tools"},{"name":"User Management","description":"Retrieve user information and
+    details"},{"name":"Task Management","description":"Manage tasks and work records"}]}'
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2026-03-23T19:20:21Z"
+  name: servicenow-table-openapi-schema
+  namespace: agentgateway-system
+  resourceVersion: "294480"
+  uid: bda73f3a-d63e-4360-825f-b9bae9867786
