@@ -1,0 +1,17 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-gitlab-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+    - name: ent-gitlab-openapi
+      static:
+        host: gitlab.com
+        path: /api/v4
+        port: 443
+        protocol: OpenAPI
+        openAPI:
+          schemaRef:
+            name: gitlab-openapi-schema

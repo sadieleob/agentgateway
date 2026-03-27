@@ -1,0 +1,16 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-figma-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+    - name: ent-figma-openapi
+      static:
+        host: api.figma.com
+        port: 443
+        protocol: OpenAPI
+        openAPI:
+          schemaRef:
+            name: figma-openapi-schema
