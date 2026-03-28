@@ -1,0 +1,605 @@
+apiVersion: v1
+data:
+  schema: '{"openapi":"3.0.3","info":{"title":"Databricks","description":"Databricks
+    is a unified analytics platform that accelerates innovation by unifying data science,
+    engineering, and business analytics.\nIt provides a collaborative environment
+    for data teams to build, deploy, and manage data and AI solutions at scale.\n\nKey
+    Features:\n- Unified analytics platform for data science, engineering, and business
+    analytics\n- Collaborative workspace for data teams and stakeholders\n- Advanced
+    data processing with Apache Spark and Delta Lake\n- Machine learning and AI capabilities
+    with MLflow integration\n- Real-time data streaming and processing\n- Data governance
+    and security with Unity Catalog\n- Interactive notebooks and SQL analytics\n-
+    Automated cluster management and scaling\n- Integration with popular data sources
+    and tools\n- Enterprise-grade security and compliance features\n","version":"1.0.0","contact":{"name":"Databricks
+    API Documentation","url":"https://docs.databricks.com/api/workspace/introduction"},"license":{"name":"Databricks
+    Terms of Service","url":"https://www.databricks.com/legal/terms-of-use"}},"servers":[{"url":"","description":"Databricks
+    workspace API","variables":{"workspace_url":{"description":"Your Databricks workspace
+    URL","default":"your-workspace.cloud.databricks.com"}}}],"security":[{"bearerAuth":[]},{"basicAuth":[]}],"tags":[{"name":"clusters","description":"Cluster
+    management operations"},{"name":"jobs","description":"Job management and execution"},{"name":"notebooks","description":"Notebook
+    operations and management"},{"name":"workspace","description":"Workspace and file
+    system operations"},{"name":"libraries","description":"Library management"},{"name":"secrets","description":"Secret
+    management"},{"name":"permissions","description":"Permission and access control"},{"name":"users","description":"User
+    management"},{"name":"groups","description":"Group management"},{"name":"service-principals","description":"Service
+    principal management"},{"name":"instance-pools","description":"Instance pool management"},{"name":"global-init-scripts","description":"Global
+    initialization scripts"},{"name":"dbfs","description":"Databricks File System
+    operations"},{"name":"repos","description":"Repository management"},{"name":"git-credentials","description":"Git
+    credentials management"},{"name":"token-management","description":"Personal access
+    token management"},{"name":"workspace-conf","description":"Workspace configuration"},{"name":"storage","description":"Storage
+    operations"},{"name":"unity-catalog","description":"Unity Catalog operations"},{"name":"sql","description":"SQL
+    analytics operations"},{"name":"warehouses","description":"SQL warehouse management"},{"name":"alerts","description":"Alert
+    management"},{"name":"dashboards","description":"Dashboard management"},{"name":"queries","description":"Query
+    management"},{"name":"data-sources","description":"Data source management"},{"name":"model-registry","description":"MLflow
+    model registry operations"},{"name":"experiments","description":"MLflow experiments
+    management"},{"name":"webhooks","description":"Webhook management"},{"name":"marketplace","description":"Marketplace
+    operations"},{"name":"lineage","description":"Data lineage operations"},{"name":"governance","description":"Data
+    governance operations"}],"paths":{"/api/2.1/clusters/list":{"get":{"summary":"List
+    clusters","description":"Return information about all pinned and active clusters,
+    and all clusters terminated within the last 30 days","operationId":"list_clusters","tags":["clusters"],"parameters":[{"name":"filter_by","in":"query","schema":{"type":"object"},"description":"Filters
+    to apply to the list of clusters"},{"name":"page_token","in":"query","schema":{"type":"string"},"description":"Use
+    next_page_token or prev_page_token returned from the previous request to list
+    the next or previous page of clusters respectively"},{"name":"page_size","in":"query","schema":{"type":"integer","minimum":1,"maximum":100,"default":20},"description":"Use
+    this field to specify the maximum number of results to be returned by the server.
+    The server may further constrain the maximum number of results returned in a single
+    page"},{"name":"sort_by","in":"query","schema":{"type":"object"},"description":"Sort
+    the list of clusters by a specific criteria"}],"responses":{"200":{"description":"List
+    of clusters","content":{"application/json":{"schema":{"type":"object","properties":{"clusters":{"type":"array","items":{"$ref":"#/components/schemas/ClusterInfo"}},"next_page_token":{"type":"string","description":"Pagination
+    token to retrieve the next page of results"},"prev_page_token":{"type":"string","description":"Pagination
+    token to retrieve the previous page of results"}}}}}}}}},"/api/2.1/clusters/create":{"post":{"summary":"Create
+    cluster","description":"Create a new cluster","operationId":"create_cluster","tags":["clusters"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateClusterRequest"}}}},"responses":{"200":{"description":"Cluster
+    created successfully","content":{"application/json":{"schema":{"type":"object","properties":{"cluster_id":{"type":"string","description":"The
+    canonical identifier for the newly created cluster"}}}}}}}}},"/api/2.1/clusters/get":{"get":{"summary":"Get
+    cluster","description":"Get information about a specific cluster","operationId":"get_cluster","tags":["clusters"],"parameters":[{"name":"cluster_id","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    ID of the cluster"}],"responses":{"200":{"description":"Cluster information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ClusterInfo"}}}}}}},"/api/2.1/clusters/start":{"post":{"summary":"Start
+    cluster","description":"Start a cluster","operationId":"start_cluster","tags":["clusters"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"cluster_id":{"type":"string","description":"The
+    ID of the cluster to start"}}}}}},"responses":{"200":{"description":"Cluster started
+    successfully"}}}},"/api/2.1/clusters/restart":{"post":{"summary":"Restart cluster","description":"Restart
+    a cluster","operationId":"restart_cluster","tags":["clusters"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"cluster_id":{"type":"string","description":"The
+    ID of the cluster to restart"}}}}}},"responses":{"200":{"description":"Cluster
+    restarted successfully"}}}},"/api/2.1/clusters/delete":{"post":{"summary":"Delete
+    cluster","description":"Delete a cluster","operationId":"delete_cluster","tags":["clusters"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"cluster_id":{"type":"string","description":"The
+    ID of the cluster to delete"}}}}}},"responses":{"200":{"description":"Cluster
+    deleted successfully"}}}},"/api/2.1/clusters/edit":{"post":{"summary":"Update
+    cluster configuration","description":"Edit the configuration of a cluster to match
+    the provided attributes and size","operationId":"edit_cluster","tags":["clusters"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"allOf":[{"$ref":"#/components/schemas/CreateClusterRequest"},{"type":"object","required":["cluster_id"],"properties":{"cluster_id":{"type":"string","description":"The
+    ID of the cluster to edit"}}}]}}}},"responses":{"200":{"description":"Cluster
+    configuration updated successfully"}}}},"/api/2.1/clusters/events":{"post":{"summary":"List
+    cluster activity events","description":"Retrieve a list of events about the activity
+    of a cluster","operationId":"list_cluster_events","tags":["clusters"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["cluster_id"],"properties":{"cluster_id":{"type":"string","description":"The
+    ID of the cluster to retrieve events for"},"start_time":{"type":"integer","description":"The
+    start time in epoch milliseconds"},"end_time":{"type":"integer","description":"The
+    end time in epoch milliseconds"},"order":{"type":"string","enum":["ASC","DESC"],"description":"The
+    order to list events"},"event_types":{"type":"array","items":{"type":"string"},"description":"An
+    optional set of event types to filter on"},"offset":{"type":"integer","description":"The
+    offset in the result set"},"limit":{"type":"integer","description":"The maximum
+    number of events to include"}}}}}},"responses":{"200":{"description":"List of
+    cluster events","content":{"application/json":{"schema":{"type":"object","properties":{"events":{"type":"array","items":{"type":"object"}},"next_page":{"type":"object","description":"Pagination
+    information for the next page"},"total_count":{"type":"integer","description":"The
+    total number of events"}}}}}}}}},"/api/2.1/clusters/spark-versions":{"get":{"summary":"List
+    available Spark versions","description":"Return the list of available Spark versions","operationId":"list_spark_versions","tags":["clusters"],"responses":{"200":{"description":"List
+    of Spark versions","content":{"application/json":{"schema":{"type":"object","properties":{"versions":{"type":"array","items":{"type":"object","properties":{"key":{"type":"string","description":"Spark
+    version key"},"name":{"type":"string","description":"Spark version name"}}}}}}}}}}}},"/api/2.1/clusters/list-node-types":{"get":{"summary":"List
+    node types","description":"Return a list of supported Spark node types","operationId":"list_node_types","tags":["clusters"],"responses":{"200":{"description":"List
+    of node types","content":{"application/json":{"schema":{"type":"object","properties":{"node_types":{"type":"array","items":{"type":"object","properties":{"node_type_id":{"type":"string","description":"Node
+    type identifier"},"memory_mb":{"type":"integer","description":"Memory in MB"},"num_cores":{"type":"number","description":"Number
+    of cores"}}}}}}}}}}}},"/api/2.2/jobs/list":{"get":{"summary":"List jobs","description":"List
+    all jobs in the workspace","operationId":"list_jobs","tags":["jobs"],"responses":{"200":{"description":"List
+    of jobs","content":{"application/json":{"schema":{"type":"object","properties":{"jobs":{"type":"array","items":{"$ref":"#/components/schemas/Job"}}}}}}}}}},"/api/2.2/jobs/create":{"post":{"summary":"Create
+    job","description":"Create a new job","operationId":"create_job","tags":["jobs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateJobRequest"}}}},"responses":{"200":{"description":"Job
+    created successfully","content":{"application/json":{"schema":{"type":"object","properties":{"job_id":{"type":"integer","format":"int64","description":"The
+    canonical identifier for the newly created job"}}}}}}}}},"/api/2.2/jobs/run-now":{"post":{"summary":"Trigger
+    a new job run","description":"Run a job immediately","operationId":"runnow","tags":["jobs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"job_id":{"type":"integer","description":"The
+    ID of the job to run"},"notebook_params":{"type":"object","description":"Parameters
+    for the job"}}}}}},"responses":{"200":{"description":"Job run initiated","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Run"}}}}}}},"/api/2.2/jobs/runs/list":{"get":{"summary":"List
+    job runs","description":"List runs for a job","operationId":"list_job_runs","tags":["jobs"],"parameters":[{"name":"job_id","in":"query","required":true,"schema":{"type":"integer"},"description":"The
+    ID of the job"},{"name":"active_only","in":"query","schema":{"type":"boolean"},"description":"Whether
+    to return only active runs"},{"name":"completed_only","in":"query","schema":{"type":"boolean"},"description":"Whether
+    to return only completed runs"},{"name":"offset","in":"query","schema":{"type":"integer"},"description":"Offset
+    for pagination"},{"name":"limit","in":"query","schema":{"type":"integer"},"description":"Limit
+    for pagination"}],"responses":{"200":{"description":"List of job runs","content":{"application/json":{"schema":{"type":"object","properties":{"runs":{"type":"array","items":{"$ref":"#/components/schemas/Run"}}}}}}}}}},"/api/2.2/jobs/get":{"get":{"summary":"Get
+    a single job","description":"Retrieves the details for a single job","operationId":"get_job","tags":["jobs"],"parameters":[{"name":"job_id","in":"query","required":true,"schema":{"type":"integer"},"description":"The
+    canonical identifier of the job"}],"responses":{"200":{"description":"Job details","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Job"}}}}}}},"/api/2.2/jobs/delete":{"post":{"summary":"Delete
+    a job","description":"Deletes a job","operationId":"delete_job","tags":["jobs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["job_id"],"properties":{"job_id":{"type":"integer","description":"The
+    canonical identifier of the job to delete"}}}}}},"responses":{"200":{"description":"Job
+    deleted successfully"}}}},"/api/2.2/jobs/reset":{"post":{"summary":"Update all
+    job settings (reset)","description":"Overwrite all settings for the given job.
+    Use the update endpoint to update job settings partially","operationId":"reset_job","tags":["jobs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"allOf":[{"$ref":"#/components/schemas/CreateJobRequest"},{"type":"object","required":["job_id"],"properties":{"job_id":{"type":"integer","description":"The
+    canonical identifier of the job to reset"}}}]}}}},"responses":{"200":{"description":"Job
+    settings reset successfully"}}}},"/api/2.2/jobs/update":{"post":{"summary":"Update
+    job settings partially","description":"Add, update, or remove specific settings
+    of an existing job. Use the reset endpoint to overwrite all job settings","operationId":"update_job","tags":["jobs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["job_id"],"properties":{"job_id":{"type":"integer","description":"The
+    canonical identifier of the job to update"},"fields_to_remove":{"type":"array","items":{"type":"string"},"description":"List
+    of fields to remove"},"new_settings":{"type":"object","description":"The new settings
+    for the job"}}}}}},"responses":{"200":{"description":"Job updated successfully"}}}},"/api/2.2/jobs/runs/get":{"get":{"summary":"Get
+    a single job run","description":"Retrieve the metadata of a run","operationId":"get_run","tags":["jobs"],"parameters":[{"name":"run_id","in":"query","required":true,"schema":{"type":"integer"},"description":"The
+    canonical identifier of the run for which to retrieve the metadata"}],"responses":{"200":{"description":"Run
+    details","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Run"}}}}}}},"/api/2.2/jobs/runs/cancel":{"post":{"summary":"Cancel
+    a run","description":"Cancels a job run. The run is canceled asynchronously","operationId":"cancel_run","tags":["jobs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["run_id"],"properties":{"run_id":{"type":"integer","description":"The
+    canonical identifier of the run to cancel"}}}}}},"responses":{"200":{"description":"Run
+    cancellation initiated"}}}},"/api/2.2/jobs/runs/get-output":{"get":{"summary":"Get
+    the output for a single run","description":"Retrieve the output and metadata of
+    a single task run","operationId":"get_run_output","tags":["jobs"],"parameters":[{"name":"run_id","in":"query","required":true,"schema":{"type":"integer"},"description":"The
+    canonical identifier for the run"}],"responses":{"200":{"description":"Run output","content":{"application/json":{"schema":{"type":"object","properties":{"metadata":{"$ref":"#/components/schemas/Run"},"error":{"type":"string","description":"The
+    error message if the run failed"},"notebook_output":{"type":"object","description":"The
+    output from a notebook task"}}}}}}}}},"/api/2.0/workspace/list":{"get":{"summary":"List
+    workspace items","description":"List items in the workspace","operationId":"list_workspace_items","tags":["workspace"],"parameters":[{"name":"path","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    workspace path"}],"responses":{"200":{"description":"List of workspace items","content":{"application/json":{"schema":{"type":"object","properties":{"objects":{"type":"array","items":{"$ref":"#/components/schemas/ObjectInfo"}}}}}}}}}},"/api/2.0/workspace/get-status":{"get":{"summary":"Get
+    workspace item status","description":"Get status of a workspace item","operationId":"get_workspace_status","tags":["workspace"],"parameters":[{"name":"path","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    workspace path"}],"responses":{"200":{"description":"Workspace item status","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ObjectInfo"}}}}}}},"/api/2.0/workspace/import":{"post":{"summary":"Import
+    workspace item","description":"Import a file or directory to the workspace","operationId":"import_workspace_item","tags":["workspace"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"path":{"type":"string","description":"The
+    workspace path"},"format":{"type":"string","enum":["SOURCE","HTML","JUPYTER","DBC","R_MARKDOWN"],"description":"The
+    format of the file"},"language":{"type":"string","enum":["SCALA","PYTHON","SQL","R"],"description":"The
+    language of the file"},"content":{"type":"string","description":"The base64-encoded
+    content"},"overwrite":{"type":"boolean","description":"Whether to overwrite existing
+    files"}}}}}},"responses":{"200":{"description":"Item imported successfully"}}}},"/api/2.0/workspace/export":{"get":{"summary":"Export
+    workspace item","description":"Export a workspace item","operationId":"export_workspace_item","tags":["workspace"],"parameters":[{"name":"path","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    workspace path"},{"name":"format","in":"query","schema":{"type":"string","enum":["SOURCE","HTML","JUPYTER","DBC","R_MARKDOWN"]},"description":"The
+    export format"},{"name":"direct_download","in":"query","schema":{"type":"boolean"},"description":"Whether
+    to return direct download link"}],"responses":{"200":{"description":"Exported
+    content","content":{"application/json":{"schema":{"type":"object","properties":{"content":{"type":"string","description":"The
+    base64-encoded content"}}}}}}}}},"/api/2.0/dbfs/list":{"get":{"summary":"List
+    DBFS items","description":"List items in the Databricks File System","operationId":"list_dbfs_items","tags":["dbfs"],"parameters":[{"name":"path","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    DBFS path"}],"responses":{"200":{"description":"List of DBFS items","content":{"application/json":{"schema":{"type":"object","properties":{"files":{"type":"array","items":{"$ref":"#/components/schemas/FileInfo"}}}}}}}}}},"/api/2.0/dbfs/put":{"post":{"summary":"Upload
+    file to DBFS","description":"Upload a file to the Databricks File System","operationId":"put_dbfs_file","tags":["dbfs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"path":{"type":"string","description":"The
+    DBFS path"},"contents":{"type":"string","description":"The base64-encoded file
+    contents"},"overwrite":{"type":"boolean","description":"Whether to overwrite existing
+    files"}}}}}},"responses":{"200":{"description":"File uploaded successfully"}}}},"/api/2.0/dbfs/read":{"get":{"summary":"Get
+    the contents of a file","description":"Returns the contents of a file from the
+    Databricks File System. If you want to download a large file, use the streaming
+    API (create/addblock/close)","operationId":"read_dbfs_file","tags":["dbfs"],"parameters":[{"name":"path","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    absolute DBFS path to the file"},{"name":"offset","in":"query","schema":{"type":"integer"},"description":"The
+    offset to read from in bytes"},{"name":"length","in":"query","schema":{"type":"integer"},"description":"The
+    number of bytes to read starting from the offset. This has a limit of 1 MB"}],"responses":{"200":{"description":"File
+    contents","content":{"application/json":{"schema":{"type":"object","properties":{"bytes_read":{"type":"integer","description":"The
+    number of bytes read"},"data":{"type":"string","description":"The base64-encoded
+    contents of the file"}}}}}}}}},"/api/2.0/dbfs/delete":{"post":{"summary":"Delete
+    a file/directory","description":"Delete the file or directory at the given path
+    (recursive delete for directories)","operationId":"delete_dbfs_file","tags":["dbfs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"The
+    absolute path of the file or directory to delete"},"recursive":{"type":"boolean","description":"Whether
+    to delete directories recursively"}}}}}},"responses":{"200":{"description":"File
+    or directory deleted successfully"}}}},"/api/2.0/dbfs/mkdirs":{"post":{"summary":"Create
+    a directory","description":"Create the given directory and all necessary parent
+    directories","operationId":"mkdirs_dbfs","tags":["dbfs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"The
+    absolute path of the directory to create"}}}}}},"responses":{"200":{"description":"Directory
+    created successfully"}}}},"/api/2.0/dbfs/get-status":{"get":{"summary":"Get the
+    information of a file or directory","description":"Get the file information of
+    a file or directory","operationId":"get_dbfs_status","tags":["dbfs"],"parameters":[{"name":"path","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    absolute path of the file or directory"}],"responses":{"200":{"description":"File
+    or directory information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/FileInfo"}}}}}}},"/api/2.0/dbfs/move":{"post":{"summary":"Move
+    a file","description":"Move a file or directory from one location to another","operationId":"move_dbfs_file","tags":["dbfs"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["source_path","destination_path"],"properties":{"source_path":{"type":"string","description":"The
+    absolute path of the source file or directory"},"destination_path":{"type":"string","description":"The
+    absolute path of the destination file or directory"}}}}}},"responses":{"200":{"description":"File
+    or directory moved successfully"}}}},"/api/2.0/preview/scim/v2/Users":{"get":{"summary":"List
+    users","description":"List all users in the workspace","operationId":"list_users","tags":["users"],"responses":{"200":{"description":"List
+    of users","content":{"application/json":{"schema":{"type":"object","properties":{"users":{"type":"array","items":{"$ref":"#/components/schemas/User"}}}}}}}}},"post":{"summary":"Create
+    user","description":"Create a new user","operationId":"create_user","tags":["users"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateUserRequest"}}}},"responses":{"200":{"description":"User
+    created successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/User"}}}}}}},"/api/2.0/preview/scim/v2/Groups":{"get":{"summary":"List
+    groups","description":"List all groups in the workspace","operationId":"list_groups","tags":["groups"],"responses":{"200":{"description":"List
+    of groups","content":{"application/json":{"schema":{"type":"object","properties":{"group_names":{"type":"array","items":{"type":"string"}}}}}}}}},"post":{"summary":"Create
+    group","description":"Create a new group","operationId":"create_group","tags":["groups"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"group_name":{"type":"string","description":"The
+    name of the group"}}}}}},"responses":{"200":{"description":"Group created successfully"}}}},"/api/2.0/secrets/list":{"get":{"summary":"List
+    secrets","description":"List secrets in a scope","operationId":"list_secrets","tags":["secrets"],"parameters":[{"name":"scope","in":"query","required":true,"schema":{"type":"string"},"description":"The
+    secret scope name"}],"responses":{"200":{"description":"List of secrets","content":{"application/json":{"schema":{"type":"object","properties":{"secrets":{"type":"array","items":{"$ref":"#/components/schemas/SecretMetadata"}}}}}}}}}},"/api/2.0/secrets/put":{"post":{"summary":"Create
+    or update secret","description":"Create or update a secret","operationId":"put_secret","tags":["secrets"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"scope":{"type":"string","description":"The
+    secret scope name"},"key":{"type":"string","description":"The secret key"},"string_value":{"type":"string","description":"The
+    secret value"}}}}}},"responses":{"200":{"description":"Secret created or updated
+    successfully"}}}},"/api/2.0/sql/warehouses":{"get":{"summary":"List warehouses","description":"List
+    all SQL warehouses that a user has access to","operationId":"list_warehouses","tags":["warehouses"],"parameters":[{"name":"run_as_user_id","in":"query","schema":{"type":"integer"},"description":"Service
+    Principal which will be used to fetch the list of endpoints"},{"name":"page_size","in":"query","schema":{"type":"integer"},"description":"The
+    max number of warehouses to return"},{"name":"page_token","in":"query","schema":{"type":"string"},"description":"A
+    page token, received from a previous ListWarehouses call"}],"responses":{"200":{"description":"List
+    of SQL warehouses","content":{"application/json":{"schema":{"type":"object","properties":{"warehouses":{"type":"array","items":{"$ref":"#/components/schemas/EndpointInfo"}},"next_page_token":{"type":"string","description":"A
+    token to retrieve the next page"}}}}}}}},"post":{"summary":"Create a warehouse","description":"Create
+    a new SQL warehouse","operationId":"create_warehouse","tags":["warehouses"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateWarehouseRequest"}}}},"responses":{"200":{"description":"SQL
+    warehouse created successfully","content":{"application/json":{"schema":{"type":"object","properties":{"id":{"type":"string","description":"Id
+    for the SQL warehouse"}}}}}}}}},"/api/2.0/sql/warehouses/{id}":{"get":{"summary":"Get
+    warehouse info","description":"Gets the information for a single SQL warehouse
+    by its ID","operationId":"get_warehouse","tags":["warehouses"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL warehouse"}],"responses":{"200":{"description":"Warehouse information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/EndpointInfo"}}}}}},"delete":{"summary":"Delete
+    a warehouse","description":"Deletes a SQL warehouse","operationId":"delete_warehouse","tags":["warehouses"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL warehouse to delete"}],"responses":{"200":{"description":"Warehouse
+    deleted successfully"}}}},"/api/2.0/sql/warehouses/{id}/start":{"post":{"summary":"Start
+    a warehouse","description":"Starts a SQL warehouse","operationId":"start_warehouse","tags":["warehouses"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL warehouse to start"}],"responses":{"200":{"description":"Warehouse
+    start initiated","content":{"application/json":{"schema":{"type":"object"}}}}}}},"/api/2.0/sql/warehouses/{id}/stop":{"post":{"summary":"Stop
+    a warehouse","description":"Stops a SQL warehouse","operationId":"stop_warehouse","tags":["warehouses"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL warehouse to stop"}],"responses":{"200":{"description":"Warehouse
+    stop initiated","content":{"application/json":{"schema":{"type":"object"}}}}}}},"/api/2.0/sql/warehouses/{id}/edit":{"post":{"summary":"Update
+    a warehouse","description":"Updates the configuration for a SQL warehouse. This
+    is an incremental edit functionality, so all fields are optional. If a field is
+    set, the corresponding configuration in the SQL warehouse is modified. If a field
+    is unset, the existing configuration value in the SQL warehouse is retained.","operationId":"edit_warehouse","tags":["warehouses"],"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the warehouse to update"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"name":{"type":"string","description":"Logical
+    name for the cluster","maxLength":100},"cluster_size":{"type":"string","description":"Size
+    of the clusters allocated for this warehouse","enum":["2X-Small","X-Small","Small","Medium","Large","X-Large","2X-Large","3X-Large","4X-Large"]},"min_num_clusters":{"type":"integer","description":"Minimum
+    number of available clusters that will be maintained","minimum":1},"max_num_clusters":{"type":"integer","description":"Maximum
+    number of clusters that the autoscaler will create","minimum":1,"maximum":40},"auto_stop_mins":{"type":"integer","description":"The
+    amount of time in minutes that a SQL warehouse must be idle before it is automatically
+    stopped","minimum":0},"creator_name":{"type":"string","description":"Warehouse
+    creator name"},"enable_photon":{"type":"boolean","description":"Configures whether
+    the warehouse should use Photon optimized clusters"},"enable_serverless_compute":{"type":"boolean","description":"Configures
+    whether the warehouse should use serverless compute"},"instance_profile_arn":{"type":"string","description":"Deprecated.
+    Instance profile used to pass IAM role to the cluster"},"spot_instance_policy":{"type":"string","enum":["POLICY_UNSPECIFIED","COST_OPTIMIZED","RELIABILITY_OPTIMIZED"],"description":"Configurations
+    whether the endpoint should use spot instances"},"tags":{"type":"object","description":"A
+    set of key-value pairs that will be tagged on all resources","additionalProperties":{"type":"string"}},"warehouse_type":{"type":"string","enum":["TYPE_UNSPECIFIED","CLASSIC","PRO"],"description":"Warehouse
+    type PRO or CLASSIC"},"channel":{"type":"object","description":"Channel Details","properties":{"name":{"type":"string","enum":["CHANNEL_NAME_PREVIEW"]},"dbsql_version":{"type":"string"}}}}}}}},"responses":{"200":{"description":"Warehouse
+    updated successfully","content":{"application/json":{"schema":{"type":"object"}}}}}}},"/api/2.0/preview/sql/queries":{"get":{"summary":"List
+    SQL queries","description":"List all SQL queries","operationId":"list_sql_queries","tags":["queries"],"responses":{"200":{"description":"List
+    of SQL queries","content":{"application/json":{"schema":{"type":"object","properties":{"queries":{"type":"array","items":{"$ref":"#/components/schemas/Query"}}}}}}}}}},"/api/2.0/preview/sql/dashboards":{"get":{"summary":"List
+    SQL dashboards","description":"List all SQL dashboards","operationId":"list_sql_dashboards","tags":["dashboards"],"responses":{"200":{"description":"List
+    of SQL dashboards","content":{"application/json":{"schema":{"type":"object","properties":{"dashboards":{"type":"array","items":{"$ref":"#/components/schemas/Dashboard"}}}}}}}}}},"/api/2.0/sql/statements":{"post":{"summary":"Execute
+    a SQL statement","description":"Execute a SQL statement on a SQL warehouse and
+    wait for the result. Results can be returned inline or via external links for
+    large datasets.","operationId":"execute_sql_statement","tags":["sql"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/ExecuteStatementRequest"}}}},"responses":{"200":{"description":"Statement
+    executed successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/StatementResponse"}}}},"400":{"description":"Bad
+    request"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"500":{"description":"Internal
+    server error"}}}},"/api/2.0/sql/statements/{statement_id}":{"get":{"summary":"Get
+    statement execution status","description":"Get the status and result of a SQL
+    statement execution","operationId":"get_statement_status","tags":["sql"],"parameters":[{"name":"statement_id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL statement"}],"responses":{"200":{"description":"Statement status
+    retrieved successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/StatementResponse"}}}},"404":{"description":"Statement
+    not found"}}}},"/api/2.0/sql/statements/{statement_id}/cancel":{"post":{"summary":"Cancel
+    a SQL statement execution","description":"Cancel an ongoing SQL statement execution","operationId":"cancel_statement","tags":["sql"],"parameters":[{"name":"statement_id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL statement to cancel"}],"responses":{"200":{"description":"Statement
+    cancellation initiated","content":{"application/json":{"schema":{"type":"object"}}}},"404":{"description":"Statement
+    not found"}}}},"/api/2.0/sql/statements/{statement_id}/result/chunks/{chunk_index}":{"get":{"summary":"Get
+    a specific result chunk","description":"Fetch a specific chunk of results from
+    a SQL statement execution. Used for paginating through large result sets.","operationId":"get_statement_result_chunk","tags":["sql"],"parameters":[{"name":"statement_id","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    ID of the SQL statement"},{"name":"chunk_index","in":"path","required":true,"schema":{"type":"integer"},"description":"The
+    index of the chunk to retrieve"},{"name":"row_offset","in":"query","schema":{"type":"integer"},"description":"The
+    starting row offset for this chunk"}],"responses":{"200":{"description":"Result
+    chunk retrieved successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/ResultChunkResponse"}}}},"404":{"description":"Statement
+    or chunk not found"}}}},"/api/2.1/unity-catalog/catalogs":{"get":{"summary":"List
+    catalogs","description":"Gets an array of catalogs in the metastore. If the caller
+    is the metastore admin, all catalogs will be retrieved. Otherwise, only catalogs
+    owned by the caller (or for which the caller has the USE_CATALOG privilege) will
+    be retrieved.","operationId":"list_catalogs","tags":["unity-catalog"],"parameters":[{"name":"page_token","in":"query","schema":{"type":"string"},"description":"Opaque
+    pagination token to go to next page based on previous query"},{"name":"max_results","in":"query","schema":{"type":"integer","default":100},"description":"Maximum
+    number of catalogs to return"}],"responses":{"200":{"description":"List of catalogs","content":{"application/json":{"schema":{"type":"object","properties":{"catalogs":{"type":"array","items":{"$ref":"#/components/schemas/CatalogInfo"}},"next_page_token":{"type":"string","description":"Opaque
+    token to retrieve the next page of results"}}}}}}}},"post":{"summary":"Create
+    a catalog","description":"Creates a new catalog instance in the parent metastore
+    if the caller is a metastore admin or has the CREATE_CATALOG privilege","operationId":"create_catalog","tags":["unity-catalog"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateCatalogRequest"}}}},"responses":{"200":{"description":"Catalog
+    created successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/CatalogInfo"}}}},"400":{"description":"Bad
+    request"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"409":{"description":"Catalog
+    already exists"}}}},"/api/2.1/unity-catalog/catalogs/{name}":{"get":{"summary":"Get
+    a catalog","description":"Gets the specified catalog in a metastore. The caller
+    must be a metastore admin, the owner of the catalog, or a user that has the USE_CATALOG
+    privilege set for their account","operationId":"get_catalog","tags":["unity-catalog"],"parameters":[{"name":"name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    name of the catalog"}],"responses":{"200":{"description":"Catalog information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/CatalogInfo"}}}},"404":{"description":"Catalog
+    not found"}}},"patch":{"summary":"Update a catalog","description":"Updates the
+    catalog that matches the supplied name. The caller must be either the owner of
+    the catalog, or a metastore admin","operationId":"update_catalog","tags":["unity-catalog"],"parameters":[{"name":"name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    name of the catalog"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdateCatalogRequest"}}}},"responses":{"200":{"description":"Catalog
+    updated successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/CatalogInfo"}}}},"400":{"description":"Bad
+    request"},"404":{"description":"Catalog not found"}}},"delete":{"summary":"Delete
+    a catalog","description":"Deletes the catalog that matches the supplied name.
+    The caller must be a metastore admin or the owner of the catalog","operationId":"delete_catalog","tags":["unity-catalog"],"parameters":[{"name":"name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    name of the catalog"},{"name":"force","in":"query","schema":{"type":"boolean","default":false},"description":"Force
+    deletion by deleting all contained objects"}],"responses":{"200":{"description":"Catalog
+    deleted successfully"},"400":{"description":"Bad request - catalog is not empty
+    and force is false"},"404":{"description":"Catalog not found"}}}},"/api/2.1/unity-catalog/schemas":{"get":{"summary":"List
+    schemas","description":"Gets an array of schemas for a catalog in the metastore.
+    If the caller is the metastore admin or the owner of the parent catalog, all schemas
+    for the catalog will be retrieved. Otherwise, only schemas owned by the caller
+    (or for which the caller has the USE_SCHEMA privilege) will be retrieved.","operationId":"list_schemas","tags":["unity-catalog"],"parameters":[{"name":"catalog_name","in":"query","required":true,"schema":{"type":"string"},"description":"Parent
+    catalog for schemas of interest"},{"name":"page_token","in":"query","schema":{"type":"string"},"description":"Opaque
+    pagination token to go to next page based on previous query"},{"name":"max_results","in":"query","schema":{"type":"integer","default":100},"description":"Maximum
+    number of schemas to return"}],"responses":{"200":{"description":"List of schemas","content":{"application/json":{"schema":{"type":"object","properties":{"schemas":{"type":"array","items":{"$ref":"#/components/schemas/SchemaInfo"}},"next_page_token":{"type":"string","description":"Opaque
+    token to retrieve the next page of results"}}}}}}}},"post":{"summary":"Create
+    a schema","description":"Creates a new schema for catalog in the metastore. The
+    caller must be a metastore admin, or have the CREATE_SCHEMA privilege in the parent
+    catalog","operationId":"create_schema","tags":["unity-catalog"],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/CreateSchemaRequest"}}}},"responses":{"200":{"description":"Schema
+    created successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/SchemaInfo"}}}},"400":{"description":"Bad
+    request"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"409":{"description":"Schema
+    already exists"}}}},"/api/2.1/unity-catalog/schemas/{full_name}":{"get":{"summary":"Get
+    a schema","description":"Gets the specified schema within the metastore. The caller
+    must be a metastore admin, the owner of the schema, or a user that has the USE_SCHEMA
+    privilege on the schema","operationId":"get_schema","tags":["unity-catalog"],"parameters":[{"name":"full_name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    full name of the schema (catalog_name.schema_name)"}],"responses":{"200":{"description":"Schema
+    information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/SchemaInfo"}}}},"404":{"description":"Schema
+    not found"}}},"patch":{"summary":"Update a schema","description":"Updates a schema
+    for a catalog. The caller must be the owner of the schema or a metastore admin","operationId":"update_schema","tags":["unity-catalog"],"parameters":[{"name":"full_name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    full name of the schema (catalog_name.schema_name)"}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdateSchemaRequest"}}}},"responses":{"200":{"description":"Schema
+    updated successfully","content":{"application/json":{"schema":{"$ref":"#/components/schemas/SchemaInfo"}}}},"400":{"description":"Bad
+    request"},"404":{"description":"Schema not found"}}},"delete":{"summary":"Delete
+    a schema","description":"Deletes the specified schema from the parent catalog.
+    The caller must be the owner of the schema or a metastore admin","operationId":"delete_schema","tags":["unity-catalog"],"parameters":[{"name":"full_name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    full name of the schema (catalog_name.schema_name)"},{"name":"force","in":"query","schema":{"type":"boolean","default":false},"description":"Force
+    deletion by deleting all contained objects"}],"responses":{"200":{"description":"Schema
+    deleted successfully"},"400":{"description":"Bad request - schema is not empty
+    and force is false"},"404":{"description":"Schema not found"}}}},"/api/2.1/unity-catalog/tables":{"get":{"summary":"List
+    tables","description":"Gets an array of all tables for the current metastore under
+    the parent catalog and schema. The caller must be a metastore admin or an owner
+    of (or have the SELECT privilege on) the table.","operationId":"list_tables","tags":["unity-catalog"],"parameters":[{"name":"catalog_name","in":"query","required":true,"schema":{"type":"string"},"description":"Name
+    of parent catalog for tables of interest"},{"name":"schema_name","in":"query","required":true,"schema":{"type":"string"},"description":"Parent
+    schema of tables"},{"name":"max_results","in":"query","schema":{"type":"integer","default":100},"description":"Maximum
+    number of tables to return"},{"name":"page_token","in":"query","schema":{"type":"string"},"description":"Opaque
+    pagination token to go to next page based on previous query"},{"name":"include_delta_metadata","in":"query","schema":{"type":"boolean","default":false},"description":"Whether
+    delta metadata should be included in the response"}],"responses":{"200":{"description":"List
+    of tables","content":{"application/json":{"schema":{"type":"object","properties":{"tables":{"type":"array","items":{"$ref":"#/components/schemas/TableInfo"}},"next_page_token":{"type":"string","description":"Opaque
+    token to retrieve the next page of results"}}}}}}}}},"/api/2.1/unity-catalog/tables/{full_name}":{"get":{"summary":"Get
+    a table","description":"Gets a table from the metastore for a specific catalog
+    and schema. The caller must be a metastore admin, be the owner of the table, or
+    be granted the SELECT privilege on the table","operationId":"get_table","tags":["unity-catalog"],"parameters":[{"name":"full_name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    full three-level name of the table (catalog_name.schema_name.table_name)"},{"name":"include_delta_metadata","in":"query","schema":{"type":"boolean","default":false},"description":"Whether
+    delta metadata should be included in the response"},{"name":"include_browse","in":"query","schema":{"type":"boolean","default":false},"description":"Whether
+    to include tables in the response for which the principal can only access selective
+    metadata"}],"responses":{"200":{"description":"Table information","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TableInfo"}}}},"404":{"description":"Table
+    not found"}}},"delete":{"summary":"Delete a table","description":"Deletes a table
+    from the specified parent catalog and schema. The caller must be the owner of
+    the table or a metastore admin","operationId":"delete_table","tags":["unity-catalog"],"parameters":[{"name":"full_name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    full three-level name of the table (catalog_name.schema_name.table_name)"}],"responses":{"200":{"description":"Table
+    deleted successfully"},"404":{"description":"Table not found"}}}},"/api/2.1/unity-catalog/tables/{full_name}/summaries":{"get":{"summary":"Get
+    a table summary","description":"Gets the table summary for the specified table,
+    including comments, data type, and table constraints","operationId":"get_table_summary","tags":["unity-catalog"],"parameters":[{"name":"full_name","in":"path","required":true,"schema":{"type":"string"},"description":"The
+    full three-level name of the table (catalog_name.schema_name.table_name)"}],"responses":{"200":{"description":"Table
+    summary","content":{"application/json":{"schema":{"$ref":"#/components/schemas/TableSummary"}}}},"404":{"description":"Table
+    not found"}}}}},"components":{"securitySchemes":{"bearerAuth":{"type":"http","scheme":"bearer","bearerFormat":"JWT"},"basicAuth":{"type":"http","scheme":"basic"}},"schemas":{"ClusterInfo":{"type":"object","properties":{"cluster_id":{"type":"string","description":"The
+    ID of the cluster"},"cluster_name":{"type":"string","description":"The name of
+    the cluster"},"spark_version":{"type":"string","description":"The Spark version"},"node_type_id":{"type":"string","description":"The
+    node type ID"},"driver_node_type_id":{"type":"string","description":"The driver
+    node type ID"},"num_workers":{"type":"integer","description":"The number of worker
+    nodes"},"autoscale":{"type":"object","properties":{"min_workers":{"type":"integer"},"max_workers":{"type":"integer"}}},"state":{"type":"string","enum":["PENDING","RUNNING","RESTARTING","RESIZING","TERMINATING","TERMINATED","ERROR","UNKNOWN"],"description":"The
+    state of the cluster"},"start_time":{"type":"integer","description":"The start
+    time in milliseconds"},"terminated_time":{"type":"integer","description":"The
+    termination time in milliseconds"},"last_state_loss_time":{"type":"integer","description":"The
+    last state loss time in milliseconds"},"num_cores":{"type":"number","description":"The
+    number of cores"},"cluster_memory_mb":{"type":"number","description":"The cluster
+    memory in MB"},"cluster_source":{"type":"string","enum":["UI","JOB","API"],"description":"The
+    source of the cluster"},"creator_user_name":{"type":"string","description":"The
+    creator user name"},"default_tags":{"type":"object","additionalProperties":{"type":"string"},"description":"Default
+    tags for the cluster"},"custom_tags":{"type":"object","additionalProperties":{"type":"string"},"description":"Custom
+    tags for the cluster"},"cluster_log_conf":{"type":"object","description":"Cluster
+    log configuration"},"spark_conf":{"type":"object","additionalProperties":{"type":"string"},"description":"Spark
+    configuration"},"aws_attributes":{"type":"object","description":"AWS-specific
+    attributes"},"azure_attributes":{"type":"object","description":"Azure-specific
+    attributes"},"gcp_attributes":{"type":"object","description":"GCP-specific attributes"},"init_scripts":{"type":"array","items":{"type":"object"},"description":"Initialization
+    scripts"},"data_security_mode":{"type":"string","enum":["NONE","SINGLE_USER","USER_ISOLATION"],"description":"Data
+    security mode"},"runtime_engine":{"type":"string","enum":["STANDARD","PHOTON"],"description":"Runtime
+    engine"}}},"CreateClusterRequest":{"type":"object","required":["cluster_name","spark_version","node_type_id"],"properties":{"cluster_name":{"type":"string","description":"The
+    name of the cluster"},"spark_version":{"type":"string","description":"The Spark
+    version"},"node_type_id":{"type":"string","description":"The node type ID"},"driver_node_type_id":{"type":"string","description":"The
+    driver node type ID"},"num_workers":{"type":"integer","description":"The number
+    of worker nodes"},"autoscale":{"type":"object","properties":{"min_workers":{"type":"integer"},"max_workers":{"type":"integer"}}},"cluster_log_conf":{"type":"object","description":"Cluster
+    log configuration"},"spark_conf":{"type":"object","additionalProperties":{"type":"string"},"description":"Spark
+    configuration"},"aws_attributes":{"type":"object","description":"AWS-specific
+    attributes"},"azure_attributes":{"type":"object","description":"Azure-specific
+    attributes"},"gcp_attributes":{"type":"object","description":"GCP-specific attributes"},"init_scripts":{"type":"array","items":{"type":"object"},"description":"Initialization
+    scripts"},"data_security_mode":{"type":"string","enum":["NONE","SINGLE_USER","USER_ISOLATION"],"description":"Data
+    security mode"},"runtime_engine":{"type":"string","enum":["STANDARD","PHOTON"],"description":"Runtime
+    engine"},"custom_tags":{"type":"object","additionalProperties":{"type":"string"},"description":"Custom
+    tags for the cluster"}}},"Job":{"type":"object","properties":{"job_id":{"type":"integer","description":"The
+    ID of the job"},"creator_user_name":{"type":"string","description":"The creator
+    user name"},"run_as_user_name":{"type":"string","description":"The user name to
+    run the job as"},"settings":{"type":"object","description":"Job settings"},"created_time":{"type":"integer","description":"The
+    creation time in milliseconds"}}},"CreateJobRequest":{"type":"object","required":["name"],"properties":{"name":{"type":"string","description":"The
+    name of the job"},"new_cluster":{"type":"object","description":"New cluster configuration"},"existing_cluster_id":{"type":"string","description":"Existing
+    cluster ID"},"libraries":{"type":"array","items":{"type":"object"},"description":"Libraries
+    to install"},"notebook_task":{"type":"object","description":"Notebook task configuration"},"spark_jar_task":{"type":"object","description":"Spark
+    JAR task configuration"},"spark_python_task":{"type":"object","description":"Spark
+    Python task configuration"},"spark_submit_task":{"type":"object","description":"Spark
+    submit task configuration"},"pipeline_task":{"type":"object","description":"Pipeline
+    task configuration"},"python_wheel_task":{"type":"object","description":"Python
+    wheel task configuration"},"sql_task":{"type":"object","description":"SQL task
+    configuration"},"dbt_task":{"type":"object","description":"DBT task configuration"},"email_notifications":{"type":"object","description":"Email
+    notification settings"},"webhook_notifications":{"type":"object","description":"Webhook
+    notification settings"},"timeout_seconds":{"type":"integer","description":"Timeout
+    in seconds"},"max_concurrent_runs":{"type":"integer","description":"Maximum concurrent
+    runs"},"tags":{"type":"object","additionalProperties":{"type":"string"},"description":"Job
+    tags"},"schedule":{"type":"object","description":"Schedule configuration"},"max_retries":{"type":"integer","description":"Maximum
+    number of retries"},"min_retry_interval_millis":{"type":"integer","description":"Minimum
+    retry interval in milliseconds"},"retry_on_timeout":{"type":"boolean","description":"Whether
+    to retry on timeout"}}},"Run":{"type":"object","properties":{"run_id":{"type":"integer","description":"The
+    ID of the run"},"job_id":{"type":"integer","description":"The ID of the job"},"run_name":{"type":"string","description":"The
+    name of the run"},"state":{"type":"object","properties":{"life_cycle_state":{"type":"string","enum":["PENDING","RUNNING","TERMINATING","TERMINATED","SKIPPED","INTERNAL_ERROR"]},"result_state":{"type":"string","enum":["SUCCESS","FAILED","TIMEDOUT","CANCELLED"]},"state_message":{"type":"string"}}},"start_time":{"type":"integer","description":"The
+    start time in milliseconds"},"end_time":{"type":"integer","description":"The end
+    time in milliseconds"},"execution_duration":{"type":"integer","description":"The
+    execution duration in milliseconds"},"setup_duration":{"type":"integer","description":"The
+    setup duration in milliseconds"},"cleanup_duration":{"type":"integer","description":"The
+    cleanup duration in milliseconds"},"trigger":{"type":"string","enum":["PERIODIC","ONE_TIME","RETRY","API","FILE_ARRIVAL","TASK_DEPENDENCY","WORKFLOW_UPDATE"]},"creator_user_name":{"type":"string","description":"The
+    creator user name"},"run_page_url":{"type":"string","description":"The run page
+    URL"},"run_type":{"type":"string","enum":["JOB","WORKFLOW","SUBMIT_TASK"]},"attempt_number":{"type":"integer","description":"The
+    attempt number"}}},"ObjectInfo":{"type":"object","properties":{"object_type":{"type":"string","enum":["NOTEBOOK","DIRECTORY","LIBRARY","REPO","FILE"],"description":"The
+    type of the object"},"path":{"type":"string","description":"The path of the object"},"language":{"type":"string","enum":["SCALA","PYTHON","SQL","R"],"description":"The
+    language of the object"},"object_id":{"type":"integer","description":"The ID of
+    the object"},"size":{"type":"integer","description":"The size of the object"},"created_at":{"type":"integer","description":"The
+    creation time in milliseconds"},"modified_at":{"type":"integer","description":"The
+    modification time in milliseconds"}}},"FileInfo":{"type":"object","properties":{"path":{"type":"string","description":"The
+    path of the file"},"is_dir":{"type":"boolean","description":"Whether the path
+    is a directory"},"file_size":{"type":"integer","description":"The size of the
+    file"},"modification_time":{"type":"integer","description":"The modification time
+    in milliseconds"}}},"User":{"type":"object","properties":{"id":{"type":"string","description":"The
+    ID of the user"},"user_name":{"type":"string","description":"The user name"},"display_name":{"type":"string","description":"The
+    display name"},"active":{"type":"boolean","description":"Whether the user is active"},"external_id":{"type":"string","description":"The
+    external ID"},"groups":{"type":"array","items":{"type":"object"},"description":"The
+    groups the user belongs to"},"roles":{"type":"array","items":{"type":"object"},"description":"The
+    roles of the user"},"entitlements":{"type":"array","items":{"type":"object"},"description":"The
+    entitlements of the user"}}},"CreateUserRequest":{"type":"object","required":["user_name"],"properties":{"user_name":{"type":"string","description":"The
+    user name"},"display_name":{"type":"string","description":"The display name"},"external_id":{"type":"string","description":"The
+    external ID"},"groups":{"type":"array","items":{"type":"object"},"description":"The
+    groups the user belongs to"},"roles":{"type":"array","items":{"type":"object"},"description":"The
+    roles of the user"},"entitlements":{"type":"array","items":{"type":"object"},"description":"The
+    entitlements of the user"}}},"SecretMetadata":{"type":"object","properties":{"key":{"type":"string","description":"The
+    secret key"},"last_updated_timestamp":{"type":"integer","description":"The last
+    updated timestamp in milliseconds"}}},"EndpointInfo":{"type":"object","properties":{"id":{"type":"string","description":"The
+    ID of the endpoint"},"name":{"type":"string","description":"The name of the endpoint"},"cluster_size":{"type":"string","description":"The
+    cluster size"},"min_num_clusters":{"type":"integer","description":"The minimum
+    number of clusters"},"max_num_clusters":{"type":"integer","description":"The maximum
+    number of clusters"},"num_clusters":{"type":"integer","description":"The current
+    number of clusters"},"auto_stop_mins":{"type":"integer","description":"Auto-stop
+    time in minutes"},"auto_termination_mins":{"type":"integer","description":"Auto-termination
+    time in minutes"},"num_active_sessions":{"type":"integer","description":"The number
+    of active sessions"},"state":{"type":"string","enum":["STARTING","RUNNING","STOPPING","STOPPED","DELETED","CONFIGURING","FAILED"],"description":"The
+    state of the endpoint"},"creator_name":{"type":"string","description":"The creator
+    name"},"jdbc_url":{"type":"string","description":"The JDBC URL"},"odbc_params":{"type":"object","description":"ODBC
+    parameters"},"tags":{"type":"object","additionalProperties":{"type":"string"},"description":"Tags
+    for the endpoint"},"spot_instance_policy":{"type":"string","enum":["COST_OPTIMIZED","RELIABILITY_OPTIMIZED"],"description":"Spot
+    instance policy"},"enable_photon":{"type":"boolean","description":"Whether Photon
+    is enabled"},"enable_serverless_compute":{"type":"boolean","description":"Whether
+    serverless compute is enabled"},"warehouse_type":{"type":"string","enum":["PRO","CLASSIC","TYPE_UNSPECIFIED"],"description":"The
+    warehouse type"},"channel":{"type":"object","description":"Channel information"}}},"CreateWarehouseRequest":{"type":"object","required":["name","cluster_size"],"properties":{"name":{"type":"string","description":"Logical
+    name for the cluster","maxLength":100},"cluster_size":{"type":"string","description":"Size
+    of the clusters allocated for this warehouse","enum":["2X-Small","X-Small","Small","Medium","Large","X-Large","2X-Large","3X-Large","4X-Large"]},"min_num_clusters":{"type":"integer","description":"Minimum
+    number of available clusters that will be maintained","default":1,"minimum":1},"max_num_clusters":{"type":"integer","description":"Maximum
+    number of clusters that the autoscaler will create","minimum":1,"maximum":40},"auto_stop_mins":{"type":"integer","description":"The
+    amount of time in minutes that a SQL warehouse must be idle before it is automatically
+    stopped","default":120,"minimum":0},"creator_name":{"type":"string","description":"Warehouse
+    creator name"},"enable_photon":{"type":"boolean","description":"Configures whether
+    the warehouse should use Photon optimized clusters","default":false},"enable_serverless_compute":{"type":"boolean","description":"Configures
+    whether the warehouse should use serverless compute"},"instance_profile_arn":{"type":"string","description":"Deprecated.
+    Instance profile used to pass IAM role to the cluster"},"spot_instance_policy":{"type":"string","enum":["POLICY_UNSPECIFIED","COST_OPTIMIZED","RELIABILITY_OPTIMIZED"],"description":"Configurations
+    whether the endpoint should use spot instances","default":"COST_OPTIMIZED"},"tags":{"type":"object","description":"A
+    set of key-value pairs that will be tagged on all resources","additionalProperties":{"type":"string"}},"warehouse_type":{"type":"string","enum":["TYPE_UNSPECIFIED","CLASSIC","PRO"],"description":"Warehouse
+    type PRO or CLASSIC"},"channel":{"type":"object","description":"Channel Details","properties":{"name":{"type":"string","enum":["CHANNEL_NAME_PREVIEW"]},"dbsql_version":{"type":"string"}}}}},"Query":{"type":"object","properties":{"id":{"type":"string","description":"The
+    ID of the query"},"name":{"type":"string","description":"The name of the query"},"description":{"type":"string","description":"The
+    description of the query"},"query":{"type":"string","description":"The SQL query"},"tags":{"type":"array","items":{"type":"string"},"description":"Tags
+    for the query"},"is_archived":{"type":"boolean","description":"Whether the query
+    is archived"},"is_draft":{"type":"boolean","description":"Whether the query is
+    a draft"},"is_scheduled":{"type":"boolean","description":"Whether the query is
+    scheduled"},"options":{"type":"object","description":"Query options"},"user_id":{"type":"integer","description":"The
+    user ID"},"created_at":{"type":"string","description":"The creation time"},"updated_at":{"type":"string","description":"The
+    update time"},"run_as_role":{"type":"string","enum":["viewer","owner"],"description":"The
+    role to run the query as"}}},"Dashboard":{"type":"object","properties":{"id":{"type":"string","description":"The
+    ID of the dashboard"},"name":{"type":"string","description":"The name of the dashboard"},"description":{"type":"string","description":"The
+    description of the dashboard"},"tags":{"type":"array","items":{"type":"string"},"description":"Tags
+    for the dashboard"},"is_archived":{"type":"boolean","description":"Whether the
+    dashboard is archived"},"is_draft":{"type":"boolean","description":"Whether the
+    dashboard is a draft"},"is_favorite":{"type":"boolean","description":"Whether
+    the dashboard is a favorite"},"is_trashed":{"type":"boolean","description":"Whether
+    the dashboard is trashed"},"user_id":{"type":"integer","description":"The user
+    ID"},"created_at":{"type":"string","description":"The creation time"},"updated_at":{"type":"string","description":"The
+    update time"},"run_as_role":{"type":"string","enum":["viewer","owner"],"description":"The
+    role to run the dashboard as"}}},"ExecuteStatementRequest":{"type":"object","required":["warehouse_id","statement"],"properties":{"warehouse_id":{"type":"string","description":"The
+    ID of the SQL warehouse to execute the statement on"},"statement":{"type":"string","description":"The
+    SQL statement to execute"},"catalog":{"type":"string","description":"The catalog
+    to use for the statement"},"schema":{"type":"string","description":"The schema
+    (database) to use for the statement"},"parameters":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"value":{"type":"string"},"type":{"type":"string"}}},"description":"Parameters
+    for the SQL statement"},"disposition":{"type":"string","enum":["INLINE","EXTERNAL_LINKS"],"description":"The
+    disposition mode for the result. INLINE returns data directly, EXTERNAL_LINKS
+    returns presigned URLs for large results","default":"INLINE"},"format":{"type":"string","enum":["JSON_ARRAY","ARROW_STREAM"],"description":"The
+    format in which to return results","default":"JSON_ARRAY"},"byte_limit":{"type":"integer","description":"The
+    maximum number of bytes to return in the result"},"wait_timeout":{"type":"string","description":"The
+    time in seconds the API will wait for the statement to execute before returning.
+    If not set, the call will continue to wait until the statement completes, up to
+    the server-side timeout"},"on_wait_timeout":{"type":"string","enum":["CONTINUE","CANCEL"],"description":"What
+    to do when a timeout occurs. CONTINUE will continue the execution, CANCEL will
+    cancel the statement","default":"CONTINUE"},"row_limit":{"type":"integer","description":"The
+    maximum number of rows to return in the result"}}},"StatementResponse":{"type":"object","properties":{"statement_id":{"type":"string","description":"The
+    unique identifier for the statement"},"status":{"type":"object","properties":{"state":{"type":"string","enum":["PENDING","RUNNING","SUCCEEDED","FAILED","CANCELED","CLOSED"],"description":"The
+    current state of the statement"},"error":{"type":"object","description":"Error
+    information if the statement failed","properties":{"error_code":{"type":"string"},"message":{"type":"string"}}}}},"manifest":{"type":"object","description":"Metadata
+    about the result","properties":{"format":{"type":"string","enum":["JSON_ARRAY","ARROW_STREAM"],"description":"The
+    format of the result"},"schema":{"type":"object","properties":{"column_count":{"type":"integer"},"columns":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"type_text":{"type":"string"},"type_name":{"type":"string"},"position":{"type":"integer"}}}}}},"total_chunk_count":{"type":"integer","description":"The
+    total number of chunks"},"total_row_count":{"type":"integer","description":"The
+    total number of rows in the result"},"total_byte_count":{"type":"integer","description":"The
+    total number of bytes in the result"},"chunks":{"type":"array","items":{"type":"object","properties":{"chunk_index":{"type":"integer"},"row_offset":{"type":"integer"},"row_count":{"type":"integer"},"byte_count":{"type":"integer"}}}},"truncated":{"type":"boolean","description":"Whether
+    the result was truncated"}}},"result":{"type":"object","properties":{"data_array":{"type":"array","items":{"type":"array","items":{"type":"object"}},"description":"The
+    result data in JSON_ARRAY format (when disposition is INLINE)"},"external_links":{"type":"array","items":{"type":"object","properties":{"chunk_index":{"type":"integer"},"row_offset":{"type":"integer"},"row_count":{"type":"integer"},"byte_count":{"type":"integer"},"external_link":{"type":"string","description":"Presigned
+    URL to download the result chunk"},"expiration":{"type":"string","description":"Expiration
+    time of the presigned URL"},"next_chunk_index":{"type":"integer","description":"Index
+    of the next chunk if available"},"next_chunk_internal_link":{"type":"string","description":"API
+    path to fetch the next chunk"}}},"description":"External links to download result
+    chunks (when disposition is EXTERNAL_LINKS)"}}}}},"ResultChunkResponse":{"type":"object","properties":{"chunk_index":{"type":"integer","description":"The
+    index of this chunk"},"row_offset":{"type":"integer","description":"The starting
+    row offset for this chunk"},"row_count":{"type":"integer","description":"The number
+    of rows in this chunk"},"byte_count":{"type":"integer","description":"The number
+    of bytes in this chunk"},"external_link":{"type":"string","description":"Presigned
+    URL to download the chunk data"},"expiration":{"type":"string","description":"Expiration
+    time of the presigned URL"},"next_chunk_index":{"type":"integer","description":"Index
+    of the next chunk if available"},"next_chunk_internal_link":{"type":"string","description":"API
+    path to fetch the next chunk"}}},"CatalogInfo":{"type":"object","properties":{"name":{"type":"string","description":"Name
+    of catalog"},"comment":{"type":"string","description":"User-provided free-form
+    text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"owner":{"type":"string","description":"Username
+    of current owner of catalog"},"storage_root":{"type":"string","description":"Storage
+    root URL for managed tables within catalog"},"storage_location":{"type":"string","description":"Storage
+    location for managed tables in the catalog"},"provider_name":{"type":"string","description":"The
+    name of delta sharing provider"},"share_name":{"type":"string","description":"The
+    name of the share under the share provider"},"created_at":{"type":"integer","format":"int64","description":"Time
+    at which this catalog was created, in epoch milliseconds"},"created_by":{"type":"string","description":"Username
+    of catalog creator"},"updated_at":{"type":"integer","format":"int64","description":"Time
+    at which this catalog was last modified, in epoch milliseconds"},"updated_by":{"type":"string","description":"Username
+    of user who last modified catalog"},"metastore_id":{"type":"string","description":"Unique
+    identifier of parent metastore"},"full_name":{"type":"string","description":"Full
+    name of catalog"},"catalog_type":{"type":"string","enum":["MANAGED_CATALOG","DELTASHARING_CATALOG","SYSTEM_CATALOG"],"description":"The
+    type of the catalog"},"isolation_mode":{"type":"string","enum":["OPEN","ISOLATED"],"description":"Whether
+    the current securable is accessible from all workspaces or a specific set of workspaces"},"enable_auto_maintenance":{"type":"string","enum":["ENABLE","DISABLE","INHERIT"],"description":"Whether
+    auto maintenance should be enabled for this catalog"}}},"CreateCatalogRequest":{"type":"object","required":["name"],"properties":{"name":{"type":"string","description":"Name
+    of catalog"},"comment":{"type":"string","description":"User-provided free-form
+    text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"storage_root":{"type":"string","description":"Storage
+    root URL for managed tables within catalog"},"provider_name":{"type":"string","description":"The
+    name of delta sharing provider"},"share_name":{"type":"string","description":"The
+    name of the share under the share provider"}}},"UpdateCatalogRequest":{"type":"object","properties":{"name":{"type":"string","description":"New
+    name for the catalog"},"comment":{"type":"string","description":"User-provided
+    free-form text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"owner":{"type":"string","description":"Username
+    of current owner of catalog"},"isolation_mode":{"type":"string","enum":["OPEN","ISOLATED"],"description":"Whether
+    the current securable is accessible from all workspaces or a specific set of workspaces"},"enable_auto_maintenance":{"type":"string","enum":["ENABLE","DISABLE","INHERIT"],"description":"Whether
+    auto maintenance should be enabled for this catalog"}}},"SchemaInfo":{"type":"object","properties":{"name":{"type":"string","description":"Name
+    of schema, relative to parent catalog"},"catalog_name":{"type":"string","description":"Name
+    of parent catalog"},"comment":{"type":"string","description":"User-provided free-form
+    text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"owner":{"type":"string","description":"Username
+    of current owner of schema"},"storage_root":{"type":"string","description":"Storage
+    root URL for managed tables within schema"},"storage_location":{"type":"string","description":"Storage
+    location for managed tables in the schema"},"created_at":{"type":"integer","format":"int64","description":"Time
+    at which this schema was created, in epoch milliseconds"},"created_by":{"type":"string","description":"Username
+    of schema creator"},"updated_at":{"type":"integer","format":"int64","description":"Time
+    at which this schema was last modified, in epoch milliseconds"},"updated_by":{"type":"string","description":"Username
+    of user who last modified schema"},"metastore_id":{"type":"string","description":"Unique
+    identifier of parent metastore"},"full_name":{"type":"string","description":"Full
+    name of schema, in form of catalog_name.schema_name"},"browse_only":{"type":"boolean","description":"Whether
+    the current securable is accessible from all workspaces or a specific set of workspaces"},"enable_auto_maintenance":{"type":"string","enum":["ENABLE","DISABLE","INHERIT"],"description":"Whether
+    auto maintenance should be enabled for this schema"}}},"CreateSchemaRequest":{"type":"object","required":["name","catalog_name"],"properties":{"name":{"type":"string","description":"Name
+    of schema, relative to parent catalog"},"catalog_name":{"type":"string","description":"Name
+    of parent catalog"},"comment":{"type":"string","description":"User-provided free-form
+    text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"storage_root":{"type":"string","description":"Storage
+    root URL for managed tables within schema"}}},"UpdateSchemaRequest":{"type":"object","properties":{"name":{"type":"string","description":"New
+    name for the schema"},"comment":{"type":"string","description":"User-provided
+    free-form text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"owner":{"type":"string","description":"Username
+    of current owner of schema"},"enable_auto_maintenance":{"type":"string","enum":["ENABLE","DISABLE","INHERIT"],"description":"Whether
+    auto maintenance should be enabled for this schema"}}},"TableInfo":{"type":"object","properties":{"name":{"type":"string","description":"Name
+    of table, relative to parent schema"},"catalog_name":{"type":"string","description":"Name
+    of parent catalog"},"schema_name":{"type":"string","description":"Name of parent
+    schema relative to its parent catalog"},"table_type":{"type":"string","enum":["MANAGED","EXTERNAL","VIEW","MATERIALIZED_VIEW","STREAMING_TABLE"],"description":"The
+    type of the table"},"data_source_format":{"type":"string","enum":["DELTA","CSV","JSON","AVRO","PARQUET","ORC","TEXT"],"description":"Data
+    source format"},"columns":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string","description":"Name
+    of the column"},"type_text":{"type":"string","description":"Full data type specification
+    as SQL text"},"type_name":{"type":"string","enum":["BOOLEAN","BYTE","SHORT","INT","LONG","FLOAT","DOUBLE","DATE","TIMESTAMP","TIMESTAMP_NTZ","STRING","BINARY","DECIMAL","INTERVAL","ARRAY","STRUCT","MAP","CHAR",null,"USER_DEFINED_TYPE","TABLE_TYPE"],"description":"Name
+    of type"},"type_json":{"type":"string","description":"Full data type specification
+    in JSON format"},"type_precision":{"type":"integer","description":"Digits of precision
+    for numeric types"},"type_scale":{"type":"integer","description":"Digits to right
+    of decimal point for numeric types"},"position":{"type":"integer","description":"Ordinal
+    position of column (starting at position 0)"},"comment":{"type":"string","description":"User-provided
+    free-form text description"},"nullable":{"type":"boolean","description":"Whether
+    field may be null"},"partition_index":{"type":"integer","description":"Partition
+    index for column"}}},"description":"The array of ColumnInfo definitions of the
+    table''s columns"},"storage_location":{"type":"string","description":"Storage
+    location for table data"},"storage_credential_name":{"type":"string","description":"Name
+    of the storage credential used to access the storage location"},"comment":{"type":"string","description":"User-provided
+    free-form text description"},"properties":{"type":"object","additionalProperties":{"type":"string"},"description":"A
+    map of key-value properties attached to the securable"},"owner":{"type":"string","description":"Username
+    of current owner of table"},"created_at":{"type":"integer","format":"int64","description":"Time
+    at which this table was created, in epoch milliseconds"},"created_by":{"type":"string","description":"Username
+    of table creator"},"updated_at":{"type":"integer","format":"int64","description":"Time
+    at which this table was last modified, in epoch milliseconds"},"updated_by":{"type":"string","description":"Username
+    of user who last modified table"},"metastore_id":{"type":"string","description":"Unique
+    identifier of parent metastore"},"full_name":{"type":"string","description":"Full
+    three-level name of table"},"data_access_configuration_id":{"type":"string","description":"Unique
+    ID of the data access configuration used to read/write data"},"table_id":{"type":"string","description":"Unique
+    identifier of the table"},"delta_runtime_properties_kvpairs":{"type":"object","additionalProperties":{"type":"string"},"description":"Map
+    of key-value properties for Delta tables"},"view_definition":{"type":"string","description":"SQL
+    text defining the view (for materialized views, standard views, and streaming
+    tables)"},"sql_path":{"type":"string","description":"List of schemes whose objects
+    can participate in the table''s definition"},"enable_auto_maintenance":{"type":"string","enum":["ENABLE","DISABLE","INHERIT"],"description":"Whether
+    auto maintenance should be enabled for this table"},"row_filter":{"type":"object","description":"Row
+    filter information","properties":{"function_name":{"type":"string"},"input_column_names":{"type":"array","items":{"type":"string"}}}},"browse_only":{"type":"boolean","description":"Whether
+    the table is accessible from all workspaces or a specific set of workspaces"}}},"TableSummary":{"type":"object","properties":{"full_name":{"type":"string","description":"Full
+    three-level name of table"},"table_type":{"type":"string","enum":["MANAGED","EXTERNAL","VIEW","MATERIALIZED_VIEW","STREAMING_TABLE"],"description":"The
+    type of the table"}}}}}}'
+kind: ConfigMap
+metadata:
+  name: databricks-statements-openapi-schema
+  namespace: agentgateway-system
