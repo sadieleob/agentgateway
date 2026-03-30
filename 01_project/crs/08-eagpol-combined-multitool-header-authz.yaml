@@ -1,0 +1,19 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  annotations: {}
+  name: combined-multitool-header-authz
+  namespace: agentgateway-system
+spec:
+  backend:
+    mcp:
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+            - request.headers["x-allowed-tools"] == "*"
+            - request.headers["x-allowed-tools"].split(",").exists(t, t.trim() == mcp.tool.name)
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: combined-multitool-backend

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mock-extauth
+  name: mock-extauth
+  namespace: agentgateway-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-extauth
+  template:
+    metadata:
+      labels:
+        app: mock-extauth
+    spec:
+      containers:
+        - env:
+            - name: PORT
+              value: "9001"
+            - name: MODEL_OVERRIDE
+              value: gpt-4o-mini
+          image: sadielio/mcp-mock-extauth:v0.0.3
+          name: mock-extauth
+          ports:
+            - containerPort: 9001
+              name: grpc
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi

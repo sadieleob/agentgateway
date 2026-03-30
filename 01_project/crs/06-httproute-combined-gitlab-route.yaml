@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations: {}
+  name: combined-gitlab-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-mcp-combined
+      namespace: agentgateway-system
+  rules:
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: combined-gitlab-backend
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /mcp/gitlab
+        - path:
+            type: PathPrefix
+            value: /.well-known/oauth-protected-resource/mcp/gitlab
+        - path:
+            type: PathPrefix
+            value: /.well-known/oauth-authorization-server/mcp/gitlab

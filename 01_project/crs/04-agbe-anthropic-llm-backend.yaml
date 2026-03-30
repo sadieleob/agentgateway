@@ -1,0 +1,15 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: anthropic-llm-backend
+  namespace: agentgateway-system
+spec:
+  ai:
+    groups:
+    - providers:
+      - name: anthropic-provider
+        anthropic: {}
+        policies:
+          auth:
+            secretRef:
+              name: anthropic-api-key

@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations: {}
+  name: agentgateway-routing-demo
+  namespace: agentgateway-system
+spec:
+  gatewayClassName: enterprise-agentgateway-nlb
+  listeners:
+    - allowedRoutes:
+        namespaces:
+          from: Same
+      hostname: agentgateway.servebeer.com
+      name: https
+      port: 443
+      protocol: HTTP

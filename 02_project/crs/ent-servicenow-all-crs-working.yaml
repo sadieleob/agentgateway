@@ -1,0 +1,228 @@
+# ServiceNow OpenAPI-to-MCP: WORKING Configuration
+# Cluster: sortega-eks-demo-oas | Version: v2.3.0-beta.6
+# Date: 2026-03-28
+#
+# This is the CONFIRMED WORKING set of ServiceNow CRs.
+# End-to-end tested: .well-known discovery, JWT auth (Entra ID),
+# ServiceNow OAuth token exchange, OpenAPI-to-MCP tool calls
+#
+# Architecture (fully external policies):
+#   - EAGBE has NO inline policies (clean, OpenAPI-to-MCP only)
+#   - JWT auth is an EXTERNAL EAGPol targeting the EAGBE
+#   - Token exchange is an EXTERNAL EAGPol targeting the EAGBE
+#   - TLS + CORS is an EXTERNAL EAGPol targeting the HTTPRoute
+#
+# Auth flow (two-layer):
+#   Downstream: MCP client -> AgentGateway (JWT via Azure AD / Entra ID)
+#   Upstream:   AgentGateway -> ServiceNow (OAuth token exchange, user-level token)
+#
+# CRs included:
+#   1. EnterpriseAgentgatewayBackend - OpenAPI->MCP (no inline policies)
+#   2. HTTPRoute - routes MCP + .well-known traffic to EAGBE
+#   3. EnterpriseAgentgatewayPolicy (TLS+CORS) - targets HTTPRoute
+#   4. EnterpriseAgentgatewayPolicy (JWT Auth) - targets EAGBE
+#   5. EnterpriseAgentgatewayPolicy (Token Exchange) - targets EAGBE
+#   6. Secret - ServiceNow OAuth app credentials for token exchange
+#   7. ConfigMap - ServiceNow OpenAPI schema (truncated)
+#   8. AgentgatewayBackend - entra-jwks (shared, Azure AD JWKS endpoint)
+#   9. AgentgatewayBackend (OSS) - servicenow-table-openapi-backend (unused, legacy)
+#
+# Prerequisites:
+#   - CRD patch (Issue #522): EnterpriseAgentgatewayPolicy CEL validation
+#     must allow EnterpriseAgentgatewayBackend as a target.
+#     See crd-patch-eagpol-target-eagbe.md for details.
+#   - ServiceNow OAuth app registered at ServiceNow instance
+#     with redirect URI: https://mcp.servebeer.com/oauth-issuer/callback/upstream
+#   - Enterprise license (AGENTGATEWAY_LICENSE)
+---
+# 1. EnterpriseAgentgatewayBackend
+#    - NO inline policies (all policies are external EAGPols)
+#    - OpenAPI-to-MCP conversion at spec.entMcp
+#    - Upstream: dev364551.service-now.com (ServiceNow dev instance)
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-servicenow-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+    - name: ent-servicenow-table-openapi
+      static:
+        host: dev364551.service-now.com
+        port: 443
+        protocol: OpenAPI
+        openAPI:
+          schemaRef:
+            name: servicenow-table-openapi-schema
+---
+# 2. HTTPRoute
+#    - Routes /servicenow/table/openapi/mcp and .well-known paths to EAGBE
+#    - backendRef uses enterpriseagentgateway.solo.io group
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: servicenow-table-openapi-mcp
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - name: agentgateway
+  rules:
+  - backendRefs:
+    - group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayBackend
+      name: ent-servicenow-openapi-backend
+    matches:
+    - path:
+        type: PathPrefix
+        value: /servicenow/table/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/servicenow/table/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/servicenow/table/openapi/mcp
+---
+# 3. EnterpriseAgentgatewayPolicy (TLS + CORS)
+#    - Targets the HTTPRoute (not the backend)
+#    - TLS for upstream HTTPS + CORS for browser/MCP clients
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: servicenow-table-openapi-policy
+  namespace: agentgateway-system
+spec:
+  backend:
+    tls: {}
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: servicenow-table-openapi-mcp
+  traffic:
+    cors:
+      allowCredentials: false
+      allowHeaders:
+      - '*'
+      allowMethods:
+      - '*'
+      allowOrigins:
+      - '*'
+      maxAge: 5
+---
+# 4. EnterpriseAgentgatewayPolicy (JWT Auth)
+#    - JWT validation via Entra ID, targets EAGBE (requires CRD patch)
+#    - Provides .well-known metadata + resourceMetadata for token exchange
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: servicenow-table-openapi-authn
+  namespace: agentgateway-system
+spec:
+  backend:
+    mcp:
+      authentication:
+        audiences:
+        - api://REDACTED
+        issuer: https://sts.windows.net/REDACTED/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-jwks
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://mcp.servebeer.com/servicenow/table/openapi/mcp
+          resource: https://mcp.servebeer.com/servicenow/table/openapi/mcp
+          scopesSupported:
+          - api://REDACTED/agentgateway
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-servicenow-openapi-backend
+---
+# 5. EnterpriseAgentgatewayPolicy (Token Exchange)
+#    - OAuth token exchange for upstream ServiceNow auth
+#    - Targets EnterpriseAgentgatewayBackend directly (requires CRD patch)
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: servicenow-table-openapi-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: servicenow-table-openapi-token-exchange
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-servicenow-openapi-backend
+---
+# 6. Secret - ServiceNow OAuth app credentials
+#    - Registered at ServiceNow dev instance dev364551
+#    - redirect_uri: https://mcp.servebeer.com/oauth-issuer/callback/upstream
+apiVersion: v1
+kind: Secret
+metadata:
+  name: servicenow-table-openapi-token-exchange
+  namespace: agentgateway-system
+type: Opaque
+stringData:
+  app_id: servicenow
+  client_id: "REDACTED"
+  client_secret: "REDACTED"
+  authorize_url: "https://dev364551.service-now.com/oauth_auth.do"
+  access_token_url: "https://dev364551.service-now.com/oauth_token.do"
+  scopes: "useraccount"
+  mcp_resource: "/servicenow/table/openapi/mcp"
+---
+# 7. ConfigMap - ServiceNow OpenAPI schema (truncated)
+#    - Full schema contains ServiceNow ITSM Table API spec
+#    - Referenced by EAGBE's spec.entMcp.targets[].openAPI.schemaRef
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: servicenow-table-openapi-schema
+  namespace: agentgateway-system
+data:
+  schema: |
+    {"openapi":"3.0.3","info":{"title":"ServiceNow IT Service Management (ITSM)","description":"ServiceNow..."}, "...truncated -- full schema has ServiceNow Table API spec..."}
+---
+# 8. AgentgatewayBackend (OSS) - entra-jwks (SHARED)
+#    - Azure AD JWKS endpoint for JWT key resolution
+#    - Referenced by EAGPol authn's jwks.backendRef
+#    - Shared across ALL backends using Entra ID authentication
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: entra-jwks
+  namespace: agentgateway-system
+spec:
+  policies:
+    tls: {}
+  static:
+    host: login.microsoftonline.com
+    port: 443
+---
+# 9. AgentgatewayBackend (OSS) - servicenow-table-openapi-backend (LEGACY)
+#    - Original OSS backend, unused now that HTTPRoute points to EAGBE
+#    - Kept for reference; can be deleted
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: servicenow-table-openapi-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: servicenow-table-openapi
+      static:
+        host: dev364551.service-now.com
+        port: 443
+        protocol: OpenAPI
+        policies:
+          tls: {}

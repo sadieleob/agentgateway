@@ -1,0 +1,17 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  annotations: {}
+  name: openai-llm-backend
+  namespace: agentgateway-system
+spec:
+  ai:
+    groups:
+      - providers:
+          - name: openai
+            openai:
+              model: gpt-4o-mini
+            policies:
+              auth:
+                secretRef:
+                  name: openai-api-key

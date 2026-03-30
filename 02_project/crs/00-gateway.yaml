@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations: {}
+  name: agentgateway
+  namespace: agentgateway-system
+spec:
+  gatewayClassName: enterprise-agentgateway
+  listeners:
+    - allowedRoutes:
+        namespaces:
+          from: All
+      name: http
+      port: 8080
+      protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: mcp.servebeer.com
+      name: https
+      port: 443
+      protocol: HTTP

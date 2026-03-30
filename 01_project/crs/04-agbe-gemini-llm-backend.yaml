@@ -1,0 +1,23 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: gemini-llm-backend
+  namespace: agentgateway-system
+spec:
+  ai:
+    groups:
+    - providers:
+      - name: gemini-provider
+        gemini: {}
+        policies:
+          auth:
+            secretRef:
+              name: gemini-api-key
+          ai:
+            routes:
+              /v1/chat/completions: Completions
+              /v1/embeddings: Embeddings
+              /v1/messages: Messages
+              /v1/models: Models
+              /v1/responses: Responses
+              /v1/responses/: Passthrough

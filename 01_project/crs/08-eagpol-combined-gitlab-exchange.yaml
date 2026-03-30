@@ -1,0 +1,16 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  annotations: {}
+  name: combined-gitlab-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        clientName: Gitlab MCP Server (Policy)
+        secretName: combined-gitlab-token-exchange
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: combined-gitlab-backend

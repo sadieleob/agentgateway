@@ -1,0 +1,222 @@
+# Figma OpenAPI-to-MCP: WORKING Configuration
+# Cluster: sortega-eks-demo-oas | Version: v2.3.0-beta.6
+# Date: 2026-03-28
+#
+# This is the CONFIRMED WORKING set of Figma CRs.
+# End-to-end tested: .well-known discovery, JWT auth, Figma OAuth,
+# token exchange, OpenAPI-to-MCP tool calls (getMe, etc.)
+#
+# Architecture (hybrid inline + external policies):
+#   - EAGBE has INLINE auth (spec.policies.mcp.authentication)
+#     Required because the proxy needs inlinePolicies.mcpAuthentication
+#     to resolve the elicitation URL for token exchange.
+#   - Token exchange is an EXTERNAL EAGPol targeting the EAGBE
+#     Requires CRD patch (Issue #522) to allow EAGPol -> EAGBE targeting.
+#   - TLS + CORS is an EXTERNAL EAGPol targeting the HTTPRoute
+#
+# Auth flow (two-layer):
+#   Downstream: MCP client -> AgentGateway (JWT via Azure AD / Entra ID)
+#   Upstream:   AgentGateway -> Figma (OAuth token exchange, user-level token)
+#
+# CRs included:
+#   1. EnterpriseAgentgatewayBackend - OpenAPI->MCP + inline JWT auth
+#   2. HTTPRoute - routes MCP + .well-known traffic to EAGBE
+#   3. EnterpriseAgentgatewayPolicy (TLS+CORS) - targets HTTPRoute
+#   4. EnterpriseAgentgatewayPolicy (Token Exchange) - targets EAGBE
+#   5. Secret - Figma OAuth app credentials for token exchange
+#   6. ConfigMap - Figma OpenAPI schema (truncated)
+#   7. AgentgatewayBackend - entra-jwks (shared, Azure AD JWKS endpoint)
+#
+# Prerequisites:
+#   - CRD patch (Issue #522): EnterpriseAgentgatewayPolicy CEL validation
+#     must allow EnterpriseAgentgatewayBackend as a target.
+#     See crd-patch-eagpol-target-eagbe.md for details.
+#   - Figma OAuth app registered at Figma developer portal
+#     with redirect URI: https://mcp.servebeer.com/oauth-issuer/callback/upstream
+#   - Enterprise license (AGENTGATEWAY_LICENSE)
+#
+# IMPORTANT LESSONS LEARNED:
+#   1. Auth MUST be inline on the EAGBE (spec.policies.mcp.authentication).
+#      Moving auth to an external EAGPol breaks token exchange because the
+#      proxy only uses inlinePolicies (from spec.policies) to resolve the
+#      elicitation URL. External EAGPol auth works for .well-known (route-level)
+#      but NOT for token exchange (backend-level).
+#      Symptom: MCP error -32001 with url "https://example.com/elicitation"
+#
+#   2. Delete any old EAGPols targeting the OSS AgentgatewayBackend.
+#      If both an OSS-targeting and EAGBE-targeting exchange policy exist,
+#      the controller stores the token under the OSS resource name but the
+#      proxy looks it up under the EAGBE resource name -> mismatch -> 400.
+#
+#   3. JWKS ConfigMap may need a controller restart to populate.
+#      The controller caches JWKS in a ConfigMap (enterprise-jwks-store-...).
+#      If this CM is missing, ALL EAGBEs with auth fail translation and get
+#      removed from the proxy. Fix: kubectl rollout restart deploy/enterprise-agentgateway
+---
+# 1. EnterpriseAgentgatewayBackend
+#    - INLINE auth at spec.policies (required for token exchange to work)
+#    - OpenAPI-to-MCP conversion at spec.entMcp
+#    - spec.policies.mcp.authentication provides:
+#      a) JWT validation config (issuer, audiences, jwks)
+#      b) resourceMetadata with issuer-proxy URL (needed for elicitation)
+#      c) .well-known endpoint metadata
+#    - Status: Accepted (after JWKS ConfigMap is populated)
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-figma-openapi-backend
+  namespace: agentgateway-system
+spec:
+  policies:
+    tls: {}
+    mcp:
+      authentication:
+        audiences:
+        - api://REDACTED
+        issuer: https://sts.windows.net/REDACTED/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-jwks
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://mcp.servebeer.com/figma/openapi/mcp
+          resource: https://mcp.servebeer.com/figma/openapi/mcp
+          scopesSupported:
+          - api://REDACTED/agentgateway
+  entMcp:
+    targets:
+    - name: ent-figma-openapi
+      static:
+        host: api.figma.com
+        port: 443
+        protocol: OpenAPI
+        openAPI:
+          schemaRef:
+            name: figma-openapi-schema
+---
+# 2. HTTPRoute
+#    - Routes /figma/openapi/mcp and .well-known paths to EAGBE
+#    - backendRef uses enterpriseagentgateway.solo.io group
+#    - Status: Accepted
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: figma-openapi-mcp
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - name: agentgateway
+  rules:
+  - backendRefs:
+    - group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayBackend
+      name: ent-figma-openapi-backend
+    matches:
+    - path:
+        type: PathPrefix
+        value: /figma/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/figma/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/figma/openapi/mcp
+---
+# 3. EnterpriseAgentgatewayPolicy (TLS + CORS)
+#    - Targets the HTTPRoute (not the backend)
+#    - TLS for upstream HTTPS + CORS for browser/MCP clients
+#    - Status: Accepted + Attached
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: figma-openapi-policy
+  namespace: agentgateway-system
+spec:
+  backend:
+    tls: {}
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: figma-openapi-mcp
+  traffic:
+    cors:
+      allowCredentials: false
+      allowHeaders:
+      - '*'
+      allowMethods:
+      - '*'
+      allowOrigins:
+      - '*'
+---
+# 4. EnterpriseAgentgatewayPolicy (Token Exchange)
+#    - OAuth token exchange for upstream Figma auth
+#    - Targets EnterpriseAgentgatewayBackend directly (requires CRD patch)
+#    - Status: Accepted + Attached
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: ent-figma-openapi-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: figma-token-exchange
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-figma-openapi-backend
+---
+# 5. Secret - Figma OAuth app credentials
+#    - Registered at Figma developer portal
+#    - redirect_uri: https://mcp.servebeer.com/oauth-issuer/callback/upstream
+apiVersion: v1
+kind: Secret
+metadata:
+  name: figma-token-exchange
+  namespace: agentgateway-system
+type: Opaque
+stringData:
+  app_id: figma
+  client_id: "REDACTED"
+  client_secret: "REDACTED"
+  authorize_url: "https://www.figma.com/oauth"
+  access_token_url: "https://api.figma.com/v1/oauth/token"
+  scopes: "current_user:read file_comments:read"
+  mcp_resource: "/figma/openapi/mcp"
+---
+# 6. ConfigMap - Figma OpenAPI schema (truncated)
+#    - Full schema contains Figma REST API v2 spec
+#    - Referenced by EAGBE's spec.entMcp.targets[].openAPI.schemaRef
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: figma-openapi-schema
+  namespace: agentgateway-system
+data:
+  schema: |
+    {"openapi":"3.1.0","info":{"title":"Figma","version":"2.0"}, "...truncated -- full schema has Figma REST API spec..."}
+---
+# 7. AgentgatewayBackend (OSS) - entra-jwks (SHARED)
+#    - Azure AD JWKS endpoint for JWT key resolution
+#    - Referenced by EAGBE's spec.policies.mcp.authentication.jwks.backendRef
+#    - Shared across ALL backends using Entra ID authentication
+#    - The controller fetches JWKS keys via this backend and caches them
+#      in a ConfigMap (enterprise-jwks-store-...)
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: entra-jwks
+  namespace: agentgateway-system
+spec:
+  policies:
+    tls: {}
+  static:
+    host: login.microsoftonline.com
+    port: 443

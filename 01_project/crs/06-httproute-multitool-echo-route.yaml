@@ -1,0 +1,26 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations: {}
+  name: multitool-echo-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-mcp-combined
+      namespace: agentgateway-system
+  rules:
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: combined-multitool-backend
+          weight: 1
+      matches:
+        - headers:
+            - name: x-tool-name
+              type: Exact
+              value: echo
+          path:
+            type: PathPrefix
+            value: /mcp/multitool

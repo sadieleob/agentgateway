@@ -1,0 +1,35 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: combined-databricks-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+      - name: mcp-target
+        static:
+          host: dbc-c2685736-8254.cloud.databricks.com
+          port: 443
+          path: /api/2.0/mcp/genie/01f11ca9d9b81d3ca8196a541bf213bd
+  policies:
+    tls: {}
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: https://sts.windows.net/REDACTED/
+        audiences:
+          - api://REDACTED
+        jwks:
+          backendRef:
+            name: entra-idp
+            kind: AgentgatewayBackend
+            group: agentgateway.dev
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+            - https://mcp.servebeer.com/mcp/databricks
+          resource: https://mcp.servebeer.com/mcp/databricks
+          scopesSupported:
+            - api://REDACTED/agentgateway

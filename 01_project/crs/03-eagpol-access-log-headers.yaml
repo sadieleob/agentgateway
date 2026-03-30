@@ -1,0 +1,65 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  annotations: {}
+  name: access-log-headers
+  namespace: agentgateway-system
+spec:
+  frontend:
+    accessLog:
+      attributes:
+        add:
+          - expression: request.body
+            name: request.body
+          - expression: request.headers.redacted()
+            name: request.all_headers
+          - expression: response.headers
+            name: response.all_headers
+          - expression: extauthz
+            name: extauthz.metadata
+          - expression: default(jwt.sub, "unknown")
+            name: agent.client_id
+          - expression: default(jwt.azp, "unknown")
+            name: agent.app_name
+          - expression: default(string(llm.inputTokens), "n/a")
+            name: tokens.input
+          - expression: default(string(llm.outputTokens), "n/a")
+            name: tokens.output
+          - expression: default(string(llm.totalTokens), "n/a")
+            name: tokens.total
+          - expression: default(string(llm.reasoningTokens), "0")
+            name: tokens.reasoning
+          - expression: default(string(llm.cachedInputTokens), "0")
+            name: tokens.cached_input
+          - expression: default(llm.requestModel, "n/a")
+            name: model.requested
+          - expression: default(llm.responseModel, "n/a")
+            name: model.actual
+          - expression: default(llm.provider, "n/a")
+            name: model.provider
+          - expression: default(string(llm.streaming), "n/a")
+            name: model.streaming
+          - expression: default(string(llm.params.temperature), "n/a")
+            name: model.temperature
+          - expression: default(string(llm.params.max_tokens), "n/a")
+            name: model.max_tokens
+          - expression: default(string(llm.params.top_p), "n/a")
+            name: model.top_p
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-routing-demo
+  traffic:
+    jwtAuthentication:
+      mode: Strict
+      providers:
+        - issuer: https://sts.windows.net/REDACTED/
+          jwks:
+            remote:
+              backendRef:
+                group: agentgateway.dev
+                kind: AgentgatewayBackend
+                name: entra-idp
+                namespace: agentgateway-system
+              cacheDuration: 5m
+              jwksPath: REDACTED/discovery/v2.0/keys

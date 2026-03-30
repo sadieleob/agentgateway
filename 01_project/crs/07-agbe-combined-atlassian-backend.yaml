@@ -1,0 +1,35 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: combined-atlassian-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+      - name: mcp-target
+        static:
+          host: mcp.atlassian.com
+          port: 443
+          path: /v1/mcp
+  policies:
+    tls: {}
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: https://sts.windows.net/REDACTED/
+        audiences:
+          - api://REDACTED
+        jwks:
+          backendRef:
+            name: entra-idp
+            kind: AgentgatewayBackend
+            group: agentgateway.dev
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+            - https://mcp.servebeer.com/mcp/atlassian
+          resource: https://mcp.servebeer.com/mcp/atlassian
+          scopesSupported:
+            - api://REDACTED/agentgateway

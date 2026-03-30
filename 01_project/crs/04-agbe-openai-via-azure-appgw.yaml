@@ -1,0 +1,27 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  annotations: {}
+  name: openai-via-azure-appgw
+  namespace: agentgateway-system
+spec:
+  ai:
+    provider:
+      host: iamready.servebeer.com
+      openai: {}
+      pathPrefix: /llm/v1
+      port: 443
+  policies:
+    ai:
+      routes:
+        '*': Passthrough
+        /v1/chat/completions: Completions
+        /v1/embeddings: Embeddings
+        /v1/messages: Messages
+        /v1/models: Models
+        /v1/responses: Responses
+    auth:
+      secretRef:
+        name: openai-api-key
+    tls:
+      insecureSkipVerify: All
