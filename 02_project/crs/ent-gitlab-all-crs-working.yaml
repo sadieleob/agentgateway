@@ -1,65 +1,3 @@
-# GitLab OpenAPI-to-MCP: WORKING Configuration
-# Cluster: demo-cluster-oas | Version: v2.3.0-beta.6
-# Date: 2026-03-28
-#
-# This is the CONFIRMED WORKING set of GitLab CRs.
-# End-to-end tested: .well-known discovery, JWT auth (Entra ID),
-# GitLab OAuth token exchange, OpenAPI-to-MCP tool calls
-#
-# Architecture (hybrid inline + external policies):
-#   - EAGBE has INLINE auth (spec.policies.mcp.authentication)
-#     Required because the proxy needs inlinePolicies.mcpAuthentication
-#     to resolve the elicitation URL for token exchange.
-#   - Token exchange is an EXTERNAL EAGPol targeting the EAGBE
-#     Requires CRD patch (Issue #522) to allow EAGPol -> EAGBE targeting.
-#   - TLS + CORS is an EXTERNAL EAGPol targeting the HTTPRoute
-#
-# Auth flow (two-layer):
-#   Downstream: MCP client -> AgentGateway (JWT via Azure AD / Entra ID)
-#   Upstream:   AgentGateway -> GitLab (OAuth token exchange, user-level token)
-#
-# CRs included:
-#   1. EnterpriseAgentgatewayBackend - OpenAPI->MCP + inline JWT auth
-#   2. HTTPRoute - routes MCP + .well-known traffic to EAGBE
-#   3. EnterpriseAgentgatewayPolicy (TLS+CORS) - targets HTTPRoute
-#   4. EnterpriseAgentgatewayPolicy (Token Exchange) - targets EAGBE
-#   5. Secret - GitLab OAuth app credentials for token exchange
-#   6. ConfigMap - GitLab OpenAPI schema (truncated)
-#   7. AgentgatewayBackend - entra-jwks (shared, Azure AD JWKS endpoint)
-#
-# Prerequisites:
-#   - CRD patch (Issue #522): EnterpriseAgentgatewayPolicy CEL validation
-#     must allow EnterpriseAgentgatewayBackend as a target.
-#     See crd-patch-eagpol-target-eagbe.md for details.
-#   - GitLab OAuth app registered at https://gitlab.com/-/user_settings/applications
-#     with redirect URI: https://mcp.servebeer.com/oauth-issuer/callback/upstream
-#   - Enterprise license (AGENTGATEWAY_LICENSE)
-#
-# IMPORTANT LESSONS LEARNED:
-#   1. Auth MUST be inline on the EAGBE (spec.policies.mcp.authentication).
-#      Moving auth to an external EAGPol breaks token exchange because the
-#      proxy only uses inlinePolicies (from spec.policies) to resolve the
-#      elicitation URL. External EAGPol auth works for .well-known (route-level)
-#      but NOT for token exchange (backend-level).
-#      Symptom: MCP error -32001 with url "https://example.com/elicitation"
-#
-#   2. Delete any old EAGPols targeting the OSS AgentgatewayBackend.
-#      If both an OSS-targeting and EAGBE-targeting exchange policy exist,
-#      the controller stores the token under the OSS resource name but the
-#      proxy looks it up under the EAGBE resource name -> mismatch -> 400.
-#      Deleted: gitlab-openapi-authn, gitlab-openapi-exchange
-#
-#   3. JWKS ConfigMap may need a controller restart to populate.
-#      The controller caches JWKS in a ConfigMap (enterprise-jwks-store-...).
-#      If this CM is missing, ALL EAGBEs with auth fail translation and get
-#      removed from the proxy. Fix: kubectl rollout restart deploy/enterprise-agentgateway
-#      This is a recurring pattern — happens after controller restarts,
-#      upgrades, or when the CM gets garbage collected.
----
-# 1. EnterpriseAgentgatewayBackend
-#    - INLINE auth at spec.policies (required for token exchange to work)
-#    - OpenAPI-to-MCP conversion at spec.entMcp
-#    - Upstream: gitlab.com/api/v4 (GitLab REST API v4)
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayBackend
 metadata:
@@ -100,9 +38,6 @@ spec:
           schemaRef:
             name: gitlab-openapi-schema
 ---
-# 2. HTTPRoute
-#    - Routes /gitlab/openapi/mcp and .well-known paths to EAGBE
-#    - backendRef uses enterpriseagentgateway.solo.io group
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -127,9 +62,6 @@ spec:
         type: PathPrefix
         value: /.well-known/oauth-authorization-server/gitlab/openapi/mcp
 ---
-# 3. EnterpriseAgentgatewayPolicy (TLS + CORS)
-#    - Targets the HTTPRoute (not the backend)
-#    - TLS for upstream HTTPS + CORS for browser/MCP clients
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayPolicy
 metadata:
@@ -153,9 +85,6 @@ spec:
       - '*'
       maxAge: 5
 ---
-# 4. EnterpriseAgentgatewayPolicy (Token Exchange)
-#    - OAuth token exchange for upstream GitLab auth
-#    - Targets EnterpriseAgentgatewayBackend directly (requires CRD patch)
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
 kind: EnterpriseAgentgatewayPolicy
 metadata:
@@ -171,9 +100,6 @@ spec:
     kind: EnterpriseAgentgatewayBackend
     name: ent-gitlab-openapi-backend
 ---
-# 5. Secret - GitLab OAuth app credentials
-#    - Created at https://gitlab.com/-/user_settings/applications
-#    - redirect_uri: https://mcp.servebeer.com/oauth-issuer/callback/upstream
 apiVersion: v1
 kind: Secret
 metadata:
@@ -189,9 +115,6 @@ stringData:
   scopes: "api"
   mcp_resource: "/gitlab/openapi/mcp"
 ---
-# 6. ConfigMap - GitLab OpenAPI schema (truncated)
-#    - Full schema is ~88KB with GitLab REST API v4 spec
-#    - Referenced by EAGBE's spec.entMcp.targets[].openAPI.schemaRef
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -199,12 +122,8 @@ metadata:
   namespace: agentgateway-system
 data:
   schema: |
-    {"openapi":"3.0.3","info":{"title":"GitLab","description":"GitLab..."}, "...truncated -- full schema is ~88KB with GitLab REST API v4 spec..."}
+    {"openapi":"3.0.3","info":{"title":"GitLab","description":"GitLab..."}, "...truncated..."}
 ---
-# 7. AgentgatewayBackend (OSS) - entra-jwks (SHARED)
-#    - Azure AD JWKS endpoint for JWT key resolution
-#    - Referenced by EAGBE's spec.policies.mcp.authentication.jwks.backendRef
-#    - Shared across ALL backends using Entra ID authentication
 apiVersion: agentgateway.dev/v1alpha1
 kind: AgentgatewayBackend
 metadata:
