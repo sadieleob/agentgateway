@@ -1,0 +1,137 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-snowflake-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+    - name: ent-snowflake-openapi
+      static:
+        host: tv73660.us-east-2.aws.snowflakecomputing.com
+        port: 443
+        protocol: OpenAPI
+        openAPI:
+          schemaRef:
+            name: snowflake-openapi-schema
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: snowflake-openapi-mcp
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - name: agentgateway
+  rules:
+  - backendRefs:
+    - group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayBackend
+      name: ent-snowflake-openapi-backend
+    matches:
+    - path:
+        type: PathPrefix
+        value: /snowflake/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/snowflake/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/snowflake/openapi/mcp
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: snowflake-openapi-policy
+  namespace: agentgateway-system
+spec:
+  backend:
+    tls: {}
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: snowflake-openapi-mcp
+  traffic:
+    cors:
+      allowCredentials: false
+      allowHeaders:
+      - '*'
+      allowMethods:
+      - '*'
+      allowOrigins:
+      - '*'
+      maxAge: 5
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: snowflake-openapi-authn
+  namespace: agentgateway-system
+spec:
+  backend:
+    mcp:
+      authentication:
+        audiences:
+        - api://REDACTED
+        issuer: https://sts.windows.net/REDACTED/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-jwks
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://mcp.servebeer.com/snowflake/openapi/mcp
+          resource: https://mcp.servebeer.com/snowflake/openapi/mcp
+          scopesSupported:
+          - api://REDACTED/agentgateway
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-snowflake-openapi-backend
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: snowflake-openapi-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: snowflake-openapi-token-exchange
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-snowflake-openapi-backend
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: snowflake-openapi-token-exchange
+  namespace: agentgateway-system
+type: Opaque
+stringData:
+  app_id: snowflake
+  client_id: "REDACTED"
+  client_secret: "REDACTED"
+  authorize_url: "https://tv73660.us-east-2.aws.snowflakecomputing.com/oauth/authorize"
+  access_token_url: "https://tv73660.us-east-2.aws.snowflakecomputing.com/oauth/token-request"
+  scopes: "session:role:PUBLIC"
+  mcp_resource: "/snowflake/openapi/mcp"
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: entra-jwks
+  namespace: agentgateway-system
+spec:
+  policies:
+    tls: {}
+  static:
+    host: login.microsoftonline.com
+    port: 443
