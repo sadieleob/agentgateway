@@ -8,7 +8,7 @@ spec:
     targets:
     - name: ent-snowflake-openapi
       static:
-        host: tv73660.us-east-2.aws.snowflakecomputing.com
+        host: xxxxxx.us-east-2.aws.snowflakecomputing.com
         port: 443
         protocol: OpenAPI
         openAPI:
@@ -119,8 +119,8 @@ stringData:
   app_id: snowflake
   client_id: "REDACTED"
   client_secret: "REDACTED"
-  authorize_url: "https://tv73660.us-east-2.aws.snowflakecomputing.com/oauth/authorize"
-  access_token_url: "https://tv73660.us-east-2.aws.snowflakecomputing.com/oauth/token-request"
+  authorize_url: "https://xxxxxx.us-east-2.aws.snowflakecomputing.com/oauth/authorize"
+  access_token_url: "https://xxxxxx.us-east-2.aws.snowflakecomputing.com/oauth/token-request"
   scopes: "session:role:PUBLIC"
   mcp_resource: "/snowflake/openapi/mcp"
 ---

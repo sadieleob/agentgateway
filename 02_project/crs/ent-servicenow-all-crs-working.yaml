@@ -8,7 +8,7 @@ spec:
     targets:
     - name: ent-servicenow-table-openapi
       static:
-        host: dev364551.service-now.com
+        host: REDACTED-INSTANCE.service-now.com
         port: 443
         protocol: OpenAPI
         openAPI:
@@ -119,8 +119,8 @@ stringData:
   app_id: servicenow
   client_id: "REDACTED"
   client_secret: "REDACTED"
-  authorize_url: "https://dev364551.service-now.com/oauth_auth.do"
-  access_token_url: "https://dev364551.service-now.com/oauth_token.do"
+  authorize_url: "https://REDACTED-INSTANCE.service-now.com/oauth_auth.do"
+  access_token_url: "https://REDACTED-INSTANCE.service-now.com/oauth_token.do"
   scopes: "useraccount"
   mcp_resource: "/servicenow/table/openapi/mcp"
 ---

@@ -8,7 +8,7 @@ spec:
     targets:
     - name: ent-databricks-statements-openapi
       static:
-        host: dbc-c2685736-8254.cloud.databricks.com
+        host: REDACTED-WORKSPACE.cloud.databricks.com
         port: 443
         protocol: OpenAPI
         openAPI:
@@ -119,8 +119,8 @@ stringData:
   app_id: databricks
   client_id: "REDACTED"
   client_secret: "REDACTED"
-  authorize_url: "https://dbc-c2685736-8254.cloud.databricks.com/oidc/v1/authorize"
-  access_token_url: "https://dbc-c2685736-8254.cloud.databricks.com/oidc/v1/token"
+  authorize_url: "https://REDACTED-WORKSPACE.cloud.databricks.com/oidc/v1/authorize"
+  access_token_url: "https://REDACTED-WORKSPACE.cloud.databricks.com/oidc/v1/token"
   scopes: "all-apis offline_access"
   mcp_resource: "/databricks/statements/openapi/mcp"
 ---

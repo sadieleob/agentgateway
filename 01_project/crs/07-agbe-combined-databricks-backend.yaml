@@ -8,7 +8,7 @@ spec:
     targets:
       - name: mcp-target
         static:
-          host: dbc-c2685736-8254.cloud.databricks.com
+          host: REDACTED-WORKSPACE.cloud.databricks.com
           port: 443
           path: /api/2.0/mcp/genie/01f11ca9d9b81d3ca8196a541bf213bd
   policies:

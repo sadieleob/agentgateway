@@ -39,7 +39,7 @@ Each service follows the same pattern: an EAGBE with an OpenAPI schema reference
                  │                               │   (EAGBE, inline auth)             │
                  │  /databricks/.../mcp ────────►│ ent-databricks-statements-...  ───►│ dbc-*.databricks.com
                  │                               │   (EAGBE, external auth)           │
-                 │  /servicenow/.../mcp ────────►│ ent-servicenow-openapi-... ───────►│ dev364551.service-now.com
+                 │  /servicenow/.../mcp ────────►│ ent-servicenow-openapi-... ───────►│ REDACTED-INSTANCE.service-now.com
                  │                               │   (EAGBE, external auth)           │
                  │  /petstore/openapi/mcp ──────►│ ent-petstore-openapi-backend ─────►│ petstore3.swagger.io
                  │                               │   (EAGBE, no auth)                 │
@@ -165,8 +165,8 @@ Auth is defined in a **separate EAGPol** targeting the EAGBE. The EAGBE has no i
 | ------- | ----- | ------------ | ------------- | ------ |
 | Figma | `ent-figma-openapi-backend` | Inline | api.figma.com | JWKS CM missing |
 | GitLab | `ent-gitlab-openapi-backend` | Inline | gitlab.com/api/v4 | JWKS CM missing |
-| Databricks | `ent-databricks-statements-openapi-backend` | External | dbc-c2685736-8254.cloud.databricks.com | Accepted |
-| ServiceNow | `ent-servicenow-openapi-backend` | External | dev364551.service-now.com | Accepted |
+| Databricks | `ent-databricks-statements-openapi-backend` | External | REDACTED-WORKSPACE.cloud.databricks.com | Accepted |
+| ServiceNow | `ent-servicenow-openapi-backend` | External | REDACTED-INSTANCE.service-now.com | Accepted |
 | Petstore | `ent-petstore-openapi-backend` | None (public) | petstore3.swagger.io | Accepted |
 
 **Known Issue:** Figma and GitLab EAGBEs show `accepted=False` because the JWKS ConfigMap (`enterprise-jwks-store-*`) is not populated. Fix: `kubectl rollout restart deploy/enterprise-agentgateway -n agentgateway-system`. This is a recurring issue after controller restarts or upgrades.
