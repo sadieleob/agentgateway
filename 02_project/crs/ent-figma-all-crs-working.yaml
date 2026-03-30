@@ -1,5 +1,5 @@
 # Figma OpenAPI-to-MCP: WORKING Configuration
-# Cluster: sortega-eks-demo-oas | Version: v2.3.0-beta.6
+# Cluster: demo-cluster-oas | Version: v2.3.0-beta.6
 # Date: 2026-03-28
 #
 # This is the CONFIRMED WORKING set of Figma CRs.

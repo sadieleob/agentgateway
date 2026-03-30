@@ -1,7 +1,7 @@
-# OpenAPI-to-MCP Architecture — sortega-eks-demo-oas
+# OpenAPI-to-MCP Architecture — demo-cluster-oas
 
 **Date:** 2026-03-30
-**Cluster:** sortega-eks-demo-oas (EKS, us-west-2)
+**Cluster:** demo-cluster-oas (EKS, us-west-2)
 **Version:** Enterprise AgentGateway v2.3.0-beta.6
 **Gateway:** `agentgateway` (single gateway, hostname `mcp.servebeer.com`)
 
