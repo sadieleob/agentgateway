@@ -21,7 +21,7 @@ spec:
               value: "9001"
             - name: MODEL_OVERRIDE
               value: gpt-4o-mini
-          image: sadielio/mcp-mock-extauth:v0.0.3
+          image: demo/mcp-mock-extauth:v0.0.3
           name: mock-extauth
           ports:
             - containerPort: 9001

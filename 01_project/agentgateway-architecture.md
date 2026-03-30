@@ -1,7 +1,7 @@
-# AgentGateway Architecture — sortega-eks-demo
+# AgentGateway Architecture — demo-cluster
 
 **Date:** 2026-03-30
-**Cluster:** sortega-eks-demo-oas (EKS, us-west-2)
+**Cluster:** demo-cluster-oas (EKS, us-west-2)
 **Version:** Enterprise AgentGateway v2.3.0-beta.6
 
 ---
@@ -196,7 +196,7 @@ The mock-extauth service enables **body-based routing** — something HTTPRoute 
 ## Combined View
 
 ```
-                              sortega-eks-demo-oas (EKS)
+                              demo-cluster-oas (EKS)
                               ──────────────────────────
 
   ┌──────────────────────────────────────────────────────────────────────────┐
@@ -236,7 +236,7 @@ The mock-extauth service enables **body-based routing** — something HTTPRoute 
 
 ## Notes
 
-- The `mock-extauth` container image is `sadielio/mcp-mock-extauth:v0.0.3` with `MODEL_OVERRIDE=gpt-4o-mini`
+- The `mock-extauth` container image is `demo/mcp-mock-extauth:v0.0.3` with `MODEL_OVERRIDE=gpt-4o-mini`
 - `openai-via-azure-appgw` points to `iamready.servebeer.com` (Azure Application Gateway) with TLS `insecureSkipVerify: All`
 - `gemini-llm-backend` is currently **not found** (status shows `BackendNotFound` on the HTTPRoute)
 - The `canary-mcp-route` on `agentgateway-routing-demo` provides a 90/10 weighted split with cookie-based session persistence (separate from the LLM provider routing)
