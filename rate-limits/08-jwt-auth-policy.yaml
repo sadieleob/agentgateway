@@ -11,15 +11,15 @@
 # The entra-idp AgentgatewayBackend (already exists) points to login.microsoftonline.com:443
 # and is reused for the JWKS fetch.
 #
-# Tenant ID: e7266048-a758-4738-b82b-1213bc9ad6ba
-# OIDC Discovery: https://login.microsoftonline.com/e7266048-a758-4738-b82b-1213bc9ad6ba/v2.0/.well-known/openid-configuration
-# Issuer (v1.0 - actual): https://sts.windows.net/e7266048-a758-4738-b82b-1213bc9ad6ba/
-# Issuer (v2.0 - not used): https://login.microsoftonline.com/e7266048-a758-4738-b82b-1213bc9ad6ba/v2.0
+# Tenant ID: REDACTED-TENANT-ID
+# OIDC Discovery: https://login.microsoftonline.com/REDACTED-TENANT-ID/v2.0/.well-known/openid-configuration
+# Issuer (v1.0 - actual): https://sts.windows.net/REDACTED-TENANT-ID/
+# Issuer (v2.0 - not used): https://login.microsoftonline.com/REDACTED-TENANT-ID/v2.0
 # App registration accessTokenAcceptedVersion=1 (default), so tokens use v1.0 issuer
-# JWKS URI: https://login.microsoftonline.com/e7266048-a758-4738-b82b-1213bc9ad6ba/discovery/v2.0/keys
+# JWKS URI: https://login.microsoftonline.com/REDACTED-TENANT-ID/discovery/v2.0/keys
 #
 # NOTE: If your Entra ID app registration has accessTokenAcceptedVersion=1 (default),
-# the token issuer will be https://sts.windows.net/e7266048-a758-4738-b82b-1213bc9ad6ba/
+# the token issuer will be https://sts.windows.net/REDACTED-TENANT-ID/
 # and you must update the issuer field below to match.
 ---
 apiVersion: enterpriseagentgateway.solo.io/v1alpha1
@@ -42,10 +42,10 @@ spec:
     jwtAuthentication:
       mode: Strict
       providers:
-      - issuer: "https://sts.windows.net/e7266048-a758-4738-b82b-1213bc9ad6ba/"
+      - issuer: "https://sts.windows.net/REDACTED-TENANT-ID/"
         jwks:
           remote:
-            jwksPath: "e7266048-a758-4738-b82b-1213bc9ad6ba/discovery/v2.0/keys"
+            jwksPath: "REDACTED-TENANT-ID/discovery/v2.0/keys"
             cacheDuration: "5m"
             backendRef:
               group: agentgateway.dev
