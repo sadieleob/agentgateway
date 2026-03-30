@@ -1,0 +1,36 @@
+# Reconstructed from route/policy references — no standalone local definition found.
+# In-cluster MCP multitool server (StreamableHTTP)
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: combined-multitool-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: mcp-target
+      static:
+        host: mcp-multitool.default.svc.cluster.local
+        port: 80
+        protocol: StreamableHTTP
+  policies:
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: https://sts.windows.net/REDACTED/
+        audiences:
+          - api://REDACTED
+        jwks:
+          backendRef:
+            name: entra-idp
+            kind: AgentgatewayBackend
+            group: agentgateway.dev
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+            - https://mcp.servebeer.com/mcp/multitool
+          resource: https://mcp.servebeer.com/mcp/multitool
+          scopesSupported:
+            - api://REDACTED/agentgateway

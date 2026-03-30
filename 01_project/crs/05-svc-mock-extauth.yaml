@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    app: mock-extauth
+  name: mock-extauth
+  namespace: agentgateway-system
+spec:
+  ports:
+    - name: grpc
+      port: 9001
+      protocol: TCP
+      targetPort: 9001
+  selector:
+    app: mock-extauth
+  type: ClusterIP

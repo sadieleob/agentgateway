@@ -1,0 +1,22 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  annotations: {}
+  name: unified-model-transform
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: llm-provider-route
+  traffic:
+    transformation:
+      request:
+        body: 'request.body.size() > 0 ? toJson(json(request.body).merge({"model": extauthz["x-model-name"]})) : request.body'
+        remove:
+          - sec-websocket-extensions
+        set:
+          - name: x-model-provider
+            value: extauthz["x-model-provider"]
+          - name: :path
+            value: 'request.uri.contains("model=") ? request.path + "?model=" + extauthz["x-model-name"] : request.path'

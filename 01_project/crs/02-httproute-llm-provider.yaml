@@ -1,0 +1,78 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations: {}
+  name: llm-provider-route
+  namespace: agentgateway-system
+spec:
+  hostnames:
+    - agentgateway.servebeer.com
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-routing-demo
+      namespace: agentgateway-system
+  rules:
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: openai-llm-backend
+          namespace: agentgateway-system
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /llm/v1/realtime
+      name: openai-realtime
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: openai-passthrough
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /llm/v1/responses/
+      name: openai-response-retrieval
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: openai-via-azure-appgw
+          weight: 1
+      matches:
+        - headers:
+            - name: x-model-provider
+              type: Exact
+              value: openai
+          path:
+            type: PathPrefix
+            value: /llm
+      name: openai
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: anthropic-llm-backend
+          weight: 1
+      matches:
+        - headers:
+            - name: x-model-provider
+              type: Exact
+              value: anthropic
+          path:
+            type: PathPrefix
+            value: /llm
+      name: anthropic
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: gemini-llm-backend
+          weight: 1
+      matches:
+        - headers:
+            - name: x-model-provider
+              type: Exact
+              value: gemini
+          path:
+            type: PathPrefix
+            value: /llm
+      name: gemini

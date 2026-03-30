@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations: {}
+  name: combined-oauth-issuer-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-mcp-combined
+      namespace: agentgateway-system
+  rules:
+    - backendRefs:
+        - group: agentgateway.dev
+          kind: AgentgatewayBackend
+          name: issuer-proxy-backend
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /oauth-issuer

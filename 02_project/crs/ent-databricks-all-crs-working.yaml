@@ -1,0 +1,237 @@
+# Databricks OpenAPI-to-MCP: WORKING Configuration
+# Cluster: sortega-eks-demo-oas | Version: v2.3.0-beta.6
+# Date: 2026-03-28
+#
+# This is the CONFIRMED WORKING set of Databricks CRs.
+# End-to-end tested: .well-known discovery, JWT auth (Entra ID),
+# Databricks OAuth token exchange, OpenAPI-to-MCP tool calls
+# (list_clusters, etc.)
+#
+# Architecture (fully external policies):
+#   - EAGBE has NO inline policies (clean, OpenAPI-to-MCP only)
+#   - JWT auth is an EXTERNAL EAGPol targeting the EAGBE
+#   - Token exchange is an EXTERNAL EAGPol targeting the EAGBE
+#   - TLS + CORS is an EXTERNAL EAGPol targeting the HTTPRoute
+#   NOTE: Unlike Figma, Databricks works with fully-external auth.
+#         This may be because the token exchange flow differs, or
+#         because the elicitation URL resolves differently. If token
+#         exchange breaks in the future, try moving auth inline on
+#         the EAGBE (see ent-figma-all-crs-working.yaml for pattern).
+#
+# Auth flow (two-layer):
+#   Downstream: MCP client -> AgentGateway (JWT via Azure AD / Entra ID)
+#   Upstream:   AgentGateway -> Databricks (OAuth token exchange, user-level token)
+#
+# CRs included:
+#   1. EnterpriseAgentgatewayBackend - OpenAPI->MCP (no inline policies)
+#   2. HTTPRoute - routes MCP + .well-known traffic to EAGBE
+#   3. EnterpriseAgentgatewayPolicy (TLS+CORS) - targets HTTPRoute
+#   4. EnterpriseAgentgatewayPolicy (JWT Auth) - targets EAGBE
+#   5. EnterpriseAgentgatewayPolicy (Token Exchange) - targets EAGBE
+#   6. Secret - Databricks OAuth app credentials for token exchange
+#   7. ConfigMap - Databricks OpenAPI schema (truncated)
+#   8. AgentgatewayBackend - entra-jwks (shared, Azure AD JWKS endpoint)
+#
+# Prerequisites:
+#   - CRD patch (Issue #522): EnterpriseAgentgatewayPolicy CEL validation
+#     must allow EnterpriseAgentgatewayBackend as a target.
+#     See crd-patch-eagpol-target-eagbe.md for details.
+#   - Databricks OAuth app registered at Databricks workspace settings
+#     with redirect URI: https://mcp.servebeer.com/oauth-issuer/callback/upstream
+#   - Enterprise license (AGENTGATEWAY_LICENSE)
+#
+# KNOWN ISSUES:
+#   1. Some tools return "invalid utf-8 sequence of 1 bytes from index 1"
+#      This is a proxy bug in the OpenAPI-to-MCP response parser. Certain
+#      Databricks API responses contain bytes the Rust proxy can't decode
+#      as UTF-8 (likely compressed or binary content in error/large responses).
+#      Tools returning simple JSON (e.g. list_clusters) work fine.
+#      Tools that return error responses or special encoding fail.
+#
+# IMPORTANT NOTES:
+#   1. The Databricks workspace URL in the secret (authorize_url, access_token_url)
+#      MUST match the workspace where the OAuth app is registered AND the
+#      upstream host in the EAGBE. Mismatch causes "Invalid Token" or
+#      "OAuth application not available in account" errors.
+#
+#   2. Originally this cluster pointed to workspace dbc-f1002050-7c6a but
+#      the OAuth app was registered on dbc-c2685736-8254. Fixed by updating
+#      both the secret URLs and the EAGBE upstream host.
+#
+#   3. JWKS ConfigMap may need a controller restart to populate.
+#      See ent-figma-all-crs-working.yaml for details.
+---
+# 1. EnterpriseAgentgatewayBackend
+#    - NO inline policies (all policies are external EAGPols)
+#    - OpenAPI-to-MCP conversion at spec.entMcp
+#    - Upstream: dbc-c2685736-8254.cloud.databricks.com (Databricks workspace)
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-databricks-statements-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+    - name: ent-databricks-statements-openapi
+      static:
+        host: dbc-c2685736-8254.cloud.databricks.com
+        port: 443
+        protocol: OpenAPI
+        openAPI:
+          schemaRef:
+            name: databricks-statements-openapi-schema
+---
+# 2. HTTPRoute
+#    - Routes /databricks/statements/openapi/mcp and .well-known paths to EAGBE
+#    - backendRef uses enterpriseagentgateway.solo.io group
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: databricks-statements-openapi-mcp
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - name: agentgateway
+  rules:
+  - backendRefs:
+    - group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayBackend
+      name: ent-databricks-statements-openapi-backend
+    matches:
+    - path:
+        type: PathPrefix
+        value: /databricks/statements/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/databricks/statements/openapi/mcp
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/databricks/statements/openapi/mcp
+---
+# 3. EnterpriseAgentgatewayPolicy (TLS + CORS)
+#    - Targets the HTTPRoute (not the backend)
+#    - TLS for upstream HTTPS + CORS for browser/MCP clients
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: databricks-statements-openapi-policy
+  namespace: agentgateway-system
+spec:
+  backend:
+    tls: {}
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: databricks-statements-openapi-mcp
+  traffic:
+    cors:
+      allowCredentials: false
+      allowHeaders:
+      - '*'
+      allowMethods:
+      - '*'
+      allowOrigins:
+      - '*'
+      maxAge: 5
+---
+# 4. EnterpriseAgentgatewayPolicy (JWT Auth)
+#    - JWT validation via Entra ID, targets EAGBE (requires CRD patch)
+#    - Provides .well-known metadata + resourceMetadata for token exchange
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: databricks-statements-openapi-authn
+  namespace: agentgateway-system
+spec:
+  backend:
+    mcp:
+      authentication:
+        audiences:
+        - api://REDACTED
+        issuer: https://sts.windows.net/REDACTED/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-jwks
+          cacheDuration: 5m
+          jwksPath: REDACTED/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://mcp.servebeer.com/databricks/statements/openapi/mcp
+          resource: https://mcp.servebeer.com/databricks/statements/openapi/mcp
+          scopesSupported:
+          - api://REDACTED/agentgateway
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-databricks-statements-openapi-backend
+---
+# 5. EnterpriseAgentgatewayPolicy (Token Exchange)
+#    - OAuth token exchange for upstream Databricks auth
+#    - Targets EnterpriseAgentgatewayBackend directly (requires CRD patch)
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: databricks-statements-openapi-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: databricks-statements-openapi-token-exchange
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-databricks-statements-openapi-backend
+---
+# 6. Secret - Databricks OAuth app credentials
+#    - Registered at Databricks workspace dbc-c2685736-8254
+#    - redirect_uri: https://mcp.servebeer.com/oauth-issuer/callback/upstream
+#    - IMPORTANT: authorize_url and access_token_url MUST match the
+#      workspace where the OAuth app is registered AND the EAGBE upstream host
+apiVersion: v1
+kind: Secret
+metadata:
+  name: databricks-statements-openapi-token-exchange
+  namespace: agentgateway-system
+type: Opaque
+stringData:
+  app_id: databricks
+  client_id: "REDACTED"
+  client_secret: "REDACTED"
+  authorize_url: "https://dbc-c2685736-8254.cloud.databricks.com/oidc/v1/authorize"
+  access_token_url: "https://dbc-c2685736-8254.cloud.databricks.com/oidc/v1/token"
+  scopes: "all-apis offline_access"
+  mcp_resource: "/databricks/statements/openapi/mcp"
+---
+# 7. ConfigMap - Databricks OpenAPI schema (truncated)
+#    - Full schema contains Databricks REST API spec
+#    - Referenced by EAGBE's spec.entMcp.targets[].openAPI.schemaRef
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: databricks-statements-openapi-schema
+  namespace: agentgateway-system
+data:
+  schema: |
+    {"openapi":"3.0.3","info":{"title":"Databricks","description":"Databricks..."}, "...truncated -- full schema has Databricks REST API spec..."}
+---
+# 8. AgentgatewayBackend (OSS) - entra-jwks (SHARED)
+#    - Azure AD JWKS endpoint for JWT key resolution
+#    - Referenced by EAGPol authn's jwks.backendRef
+#    - Shared across ALL backends using Entra ID authentication
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: entra-jwks
+  namespace: agentgateway-system
+spec:
+  policies:
+    tls: {}
+  static:
+    host: login.microsoftonline.com
+    port: 443

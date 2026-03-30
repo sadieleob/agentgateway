@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations: {}
+  name: agentgateway-mcp-combined
+  namespace: agentgateway-system
+spec:
+  gatewayClassName: enterprise-agentgateway-combined
+  listeners:
+    - allowedRoutes:
+        namespaces:
+          from: Same
+      hostname: mcp.servebeer.com
+      name: https
+      port: 443
+      protocol: HTTP

@@ -1,0 +1,17 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  annotations: {}
+  name: ent-petstore-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+      - name: ent-petstore-openapi
+        static:
+          host: petstore.agentgateway-system.svc.cluster.local
+          openAPI:
+            schemaRef:
+              name: petstore-openapi-schema
+          port: 8080
+          protocol: OpenAPI

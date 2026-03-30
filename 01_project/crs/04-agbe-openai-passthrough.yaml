@@ -1,0 +1,23 @@
+# Passthrough AGBE for response retrieval (GET /v1/responses/{id})
+# Same upstream as openai-via-azure-appgw, but with *:Passthrough only
+# (skips body parsing for body-less GET requests)
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: openai-passthrough
+  namespace: agentgateway-system
+spec:
+  ai:
+    provider:
+      host: iamready.servebeer.com
+      openai: {}
+      port: 443
+  policies:
+    ai:
+      routes:
+        "*": Passthrough
+    auth:
+      secretRef:
+        name: openai-api-key
+    tls:
+      insecureSkipVerify: All

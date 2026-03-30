@@ -1,0 +1,21 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  annotations: {}
+  labels:
+    app: agentgateway
+    purpose: tool-name-extraction
+  name: mcp-tool-name-extraction
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: agentgateway-mcp-combined
+  traffic:
+    phase: PreRouting
+    transformation:
+      request:
+        set:
+          - name: x-tool-name
+            value: 'request.body.size() > 0 && json(request.body).method == "tools/call" ? json(request.body).params.name : "n/a"'
