@@ -39,7 +39,7 @@ The `AgentgatewayBackend` uses these fields at the provider level to redirect th
 
 The Snowflake UI URL `app.snowflake.com/<org>/<account>` maps to the REST API host as `<org>-<account>.snowflakecomputing.com`. For example:
 
-- UI: `app.snowflake.com/kewflmb/rp40632`
+- UI: `app.snowflake.com/<ORG>/<ACCOUNT>`
 - REST API: `<ORG>-<ACCOUNT>.snowflakecomputing.com`
 
 The format is `<org>-<account>` (NOT `<account>-<org>`).
