@@ -1,0 +1,28 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayParameters
+metadata:
+  name: agentgateway-params
+  namespace: ${AGW_NAMESPACE}
+spec:
+  logging:
+    format: json
+    level: debug
+  rawConfig:
+    config:
+      stsAuthToken: "./var/run/secrets/xds-tokens/xds-token"
+      stsUri: "http://enterprise-agentgateway.${AGW_NAMESPACE}.svc.cluster.local:7777/elicitations/oauth2/token"
+  service:
+    spec:
+      type: LoadBalancer
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: enterprise-agentgateway
+spec:
+  controllerName: solo.io/enterprise-agentgateway
+  parametersRef:
+    group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayParameters
+    name: agentgateway-params
+    namespace: ${AGW_NAMESPACE}

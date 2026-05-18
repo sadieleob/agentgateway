@@ -1,0 +1,26 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: mcp-token-exchange
+  namespace: ${AGW_NAMESPACE}
+spec:
+  targetRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: ${BACKEND_NAME}
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: mcp-token-exchange-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mcp-token-exchange-secret
+  namespace: ${AGW_NAMESPACE}
+type: Opaque
+stringData:
+  app_id: "${BACKEND_APP_ID}"
+  base_url: "${BACKEND_BASE_URL}"
+  mcp_resource: "${BACKEND_MCP_RESOURCE}"
+  scopes: "${BACKEND_SCOPES}"

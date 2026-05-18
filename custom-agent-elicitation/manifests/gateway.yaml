@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: agentgateway
+  namespace: ${AGW_NAMESPACE}
+spec:
+  gatewayClassName: enterprise-agentgateway
+  listeners:
+    - name: https
+      hostname: ${GATEWAY_HOSTNAME}
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: ${TLS_SECRET_NAME}
+      allowedRoutes:
+        namespaces:
+          from: Same

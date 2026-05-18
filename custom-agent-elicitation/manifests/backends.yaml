@@ -1,0 +1,57 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: entra-idp
+  namespace: ${AGW_NAMESPACE}
+spec:
+  static:
+    host: login.microsoftonline.com
+    port: 443
+  policies:
+    tls: {}
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: issuer-proxy-backend
+  namespace: ${AGW_NAMESPACE}
+spec:
+  static:
+    host: enterprise-agentgateway.${AGW_NAMESPACE}.svc.cluster.local
+    port: 7777
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: ${BACKEND_NAME}
+  namespace: ${AGW_NAMESPACE}
+spec:
+  mcp:
+    targets:
+      - name: mcp-target
+        static:
+          host: ${BACKEND_HOST}
+          path: ${BACKEND_PATH}
+          port: ${BACKEND_PORT}
+  policies:
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: ${ENTRA_ISSUER}
+        audiences:
+          - ${ENTRA_AUDIENCE}
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-idp
+          cacheDuration: 5m
+          jwksPath: ${ENTRA_JWKS_PATH}
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.${AGW_NAMESPACE}.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+            - "${RESOURCE_BASE_URL}${BACKEND_ROUTE_PREFIX}"
+          resource: "${RESOURCE_BASE_URL}${BACKEND_ROUTE_PREFIX}"
+          scopesSupported:
+            - ${ENTRA_SCOPE}
+    tls: {}
