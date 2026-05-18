@@ -160,8 +160,6 @@ export BACKEND_MCP_RESOURCE="/mcp/atlassian"
 export BACKEND_SCOPES="read:jira-work"
 ```
 
-**Note:** `env.local.sh` contains secrets and should NOT be committed to version control.
-
 ## Deploy
 
 ```bash
