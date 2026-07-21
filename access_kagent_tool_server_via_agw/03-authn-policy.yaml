@@ -1,0 +1,31 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: kagent-mcp-authn
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+    - group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayBackend
+      name: ent-kagent-mcp-backend
+  backend:
+    mcp:
+      authentication:
+        mode: Strict
+        issuer: "https://sts.windows.net/<ENTRA_TENANT_ID>/"
+        audiences:
+          - "api://<ENTRA_CLIENT_ID>"
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-jwks
+          cacheDuration: "5m"
+          jwksPath: "<ENTRA_TENANT_ID>/discovery/v2.0/keys"
+        resourceMetadata:
+          resource: "https://<AGW_HOSTNAME>/kagent/mcp"
+          authorizationServers:
+            - "https://<AGW_HOSTNAME>/kagent/mcp"
+          scopesSupported:
+            - "api://<ENTRA_CLIENT_ID>/agentgateway"
+          agentgateway.dev/issuer-proxy: "http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer"

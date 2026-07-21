@@ -1,0 +1,13 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-kagent-mcp-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+      - name: kagent-tools
+        static:
+          host: kagent-tools.kagent.svc.cluster.local
+          port: 8084
+          protocol: StreamableHTTP

@@ -1,0 +1,28 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: kagent-mcp-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: https
+      namespace: agentgateway-system
+  hostnames:
+    - "<AGW_HOSTNAME>"
+  rules:
+    - backendRefs:
+        - group: enterpriseagentgateway.solo.io
+          kind: EnterpriseAgentgatewayBackend
+          name: ent-kagent-mcp-backend
+      matches:
+        - path:
+            type: PathPrefix
+            value: /kagent/mcp
+        - path:
+            type: PathPrefix
+            value: /.well-known/oauth-protected-resource/kagent/mcp
+        - path:
+            type: PathPrefix
+            value: /.well-known/oauth-authorization-server/kagent/mcp
