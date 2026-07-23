@@ -369,21 +369,19 @@ mcp: failed to send message: http upstream error: http request failed: EOF while
 
 ## Verify Token
 
-### Get a token (M2M test app)
+### Get a token
 
 ```bash
 curl -s --request POST \
   --url https://<AUTH0_DOMAIN>/oauth/token \
   --header 'content-type: application/json' \
   --data '{
-    "client_id":"<AUTH0_M2M_CLIENT_ID>",
-    "client_secret":"<AUTH0_M2M_CLIENT_SECRET>",
+    "client_id":"<AUTH0_TEST_CLIENT_ID>",
+    "client_secret":"<AUTH0_TEST_CLIENT_SECRET>",
     "audience":"https://<GATEWAY_HOSTNAME>",
     "grant_type":"client_credentials"
   }' | jq -r '.access_token'
 ```
-
-This uses a separate M2M app in Auth0 — not the Native app used by the issuer proxy. Useful for quick token verification without going through the browser flow.
 
 ### Decode the token
 
