@@ -113,13 +113,13 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 # AGW Enterprise CRDs
 helm upgrade -i --create-namespace -n agentgateway-system \
   enterprise-agentgateway-crds \
-  oci://us-docker.pkg.dev/developers-369321/agentgateway-enterprise/charts/enterprise-agentgateway-crds \
+  oci://us-docker.pkg.dev/solo-public/enterprise-agentgateway/charts/enterprise-agentgateway-crds \
   --version v${VERSION}
 
 # AGW Enterprise with issuer proxy + token exchange
 helm upgrade -i -n agentgateway-system \
   enterprise-agentgateway \
-  oci://us-docker.pkg.dev/developers-369321/agentgateway-enterprise/charts/enterprise-agentgateway \
+  oci://us-docker.pkg.dev/solo-public/enterprise-agentgateway/charts/enterprise-agentgateway \
   --version v${VERSION} \
   --set licensing.licenseKey=$AGENTGATEWAY_LICENSE_KEY \
   --set tokenExchange.enabled=true \
