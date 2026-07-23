@@ -1,11 +1,6 @@
 # Auth0 + Salesforce MCP via AGW Enterprise — Setup Notes
 
-**Cluster:** <CLUSTER_NAME>
 **Version:** enterprise-agentgateway 2026.7.0
-**Gateway:** agw-mcp (<GATEWAY_HOSTNAME>)
-**Salesforce Org:** <SALESFORCE_ORG> (Developer Edition)
-**Date:** 2026-07-22
-**Status:** WORKING (with workaround)
 
 ---
 
