@@ -11,23 +11,53 @@
 
 ## Auth Architecture
 
-OAuth Issuer Proxy + Elicitation pattern with two-layer auth:
+OAuth Issuer Proxy + Elicitation pattern with two phases:
+
+### Phase 1 — Session Setup (one-time, via browser redirects)
 
 ```
-MCP Client
+MCP Client (Inspector)
   │
+  ├─ 1. POST /mcp/salesforce → no session
+  │     └─ Discovers /.well-known/oauth-protected-resource → issuer proxy
+  │
+  ├─ 2. Browser → /oauth-issuer/authorize
+  │     └─ Issuer proxy redirects to Auth0 /authorize
+  │        (client_id, code_challenge, scope, ?audience=)
+  │
+  ├─ 3. User logs in at Auth0 (Google social)
+  │     └─ Auth0 redirects → /oauth-issuer/callback/downstream?code=AUTH0_CODE
+  │        Issuer proxy exchanges AUTH0_CODE → Auth0 JWT (server-side)
+  │
+  ├─ 4. Issuer proxy redirects browser to Salesforce /authorize (PKCE)
+  │     └─ User consents at Salesforce
+  │        Salesforce redirects → /oauth-issuer/callback/upstream?code=SF_CODE
+  │        Issuer proxy exchanges SF_CODE → Salesforce token (cached in DB)
+  │
+  └─ 5. Issuer proxy issues its own auth code → MCP client
+        MCP client calls /oauth-issuer/token with that code
+        └─ Gets back the Auth0 JWT ← MCP client stores this
+```
+
+### Phase 2 — Per-Request (every MCP call)
+
+```
+MCP Client (Inspector)
+  │ Authorization: Bearer <Auth0 JWT>
   ▼
-agw-mcp proxy (<GATEWAY_HOSTNAME>)
+agw-mcp proxy
   │
-  ├─ JWT validation (Auth0, mode: Permissive)
+  ├─ JWT validation (Auth0 JWKS, mode: Permissive)
   │
-  ├─ Token exchange ──► enterprise-agentgateway STS (:7777)
-  │                        │
-  │                        ├─ Downstream: Auth0 (/authorize + /token)
-  │                        └─ Upstream: Salesforce OAuth (/authorize + /token)
+  ├─ STS (:7777/elicitations/oauth2/token)
+  │     subject_token = Auth0 JWT
+  │     └─ Validates JWT against Auth0 JWKS
+  │        Looks up cached Salesforce token for this user
+  │        Returns Salesforce access token to proxy
   │
-  └─ Forward to Salesforce MCP ──► api.salesforce.com:443
-                                    /platform/mcp/v1/platform/sobject-all
+  └─ Forward to api.salesforce.com:443
+       Authorization: Bearer <Salesforce token>
+       /platform/mcp/v1/platform/sobject-all
 ```
 
 ---
