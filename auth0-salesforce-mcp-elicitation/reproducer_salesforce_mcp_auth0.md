@@ -1,6 +1,5 @@
 # Reproducer: Salesforce MCP with Auth0 (Issuer Proxy + Elicitation)
 
-Reproduces the Auth0 opaque token issue documented in [bug_sts_opaque_token_subject_validation.md](bug_sts_opaque_token_subject_validation.md).
 
 ## Prerequisites
 
