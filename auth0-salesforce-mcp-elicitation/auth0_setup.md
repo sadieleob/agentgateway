@@ -369,14 +369,29 @@ mcp: failed to send message: http upstream error: http request failed: EOF while
 
 ## Verify Token
 
-The Auth0 app is Native (browser-based web app), so tokens are obtained via the authorization code flow through the issuer proxy, not via client_credentials. To verify a token from an active session:
+### Get a token (M2M test app)
 
 ```bash
-# Decode an Auth0 JWT from the browser session (copy from MCP Inspector Authorization header)
+curl -s --request POST \
+  --url https://<AUTH0_DOMAIN>/oauth/token \
+  --header 'content-type: application/json' \
+  --data '{
+    "client_id":"<AUTH0_M2M_CLIENT_ID>",
+    "client_secret":"<AUTH0_M2M_CLIENT_SECRET>",
+    "audience":"https://<GATEWAY_HOSTNAME>",
+    "grant_type":"client_credentials"
+  }' | jq -r '.access_token'
+```
+
+This uses a separate M2M app in Auth0 — not the Native app used by the issuer proxy. Useful for quick token verification without going through the browser flow.
+
+### Decode the token
+
+```bash
 echo "<TOKEN>" | cut -d. -f2 | base64 -d 2>/dev/null | jq '{iss, aud, sub, exp}'
 ```
 
-Expected output (from post-fix logs):
+Expected output:
 ```json
 {
   "iss": "https://<AUTH0_DOMAIN>/",
