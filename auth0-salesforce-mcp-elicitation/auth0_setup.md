@@ -24,7 +24,7 @@ MCP Client (Inspector)
   │     └─ Auth0 redirects → /oauth-issuer/callback/downstream?code=AUTH0_CODE
   │        Issuer proxy exchanges AUTH0_CODE → Auth0 JWT (server-side)
   │
-  ├─ 4. Issuer proxy redirects browser to Salesforce /authorize (PKCE)
+  ├─ 4. Issuer proxy redirects browser to Salesforce /authorize
   │     └─ User consents at Salesforce
   │        Salesforce redirects → /oauth-issuer/callback/upstream?code=SF_CODE
   │        Issuer proxy exchanges SF_CODE → Salesforce token (cached in DB)

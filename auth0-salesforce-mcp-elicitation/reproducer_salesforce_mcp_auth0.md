@@ -8,7 +8,7 @@
   - Native (browser-based web app) application
   - Custom API with audience matching gateway hostname
 - Salesforce org with:
-  - External Client App (OAuth enabled, PKCE)
+  - External Client App (OAuth enabled)
   - Active MCP server (e.g. `sobject-all`)
 - PostgreSQL for STS session storage
 - TLS certificate for gateway hostname
