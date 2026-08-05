@@ -1,0 +1,48 @@
+# Typed elicitation + token exchange for Entra ID → Azure Databricks.
+#
+# entElicitation.brokered: the OAuth issuer proxy brokers the downstream flow for
+# /databricks/azure/mcp. chainedAuth obtains a Databricks-scoped Entra token per
+# user and banks it for the data plane.
+#
+# entTokenExchange.solo.elicitation: the data plane exchanges the inbound downstream
+# JWT at the controller STS, retrieving the banked upstream token.
+#
+# AGW authenticates to Entra with a certificate (private_key_jwt / PS256) on both
+# the downstream leg (KGW_OAUTH_ISSUER_CONFIG) and this upstream leg — no
+# client_secret anywhere. See 06-certificate-entra-client.yaml.
+#
+# The two surfaces entElicitation/entTokenExchange are mutually exclusive with the
+# deprecated backend.tokenExchange.elicitation.secretName — do not mix them.
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: azure-databricks-openapi-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    entElicitation:
+      brokered:
+        mcpResourcePath: /databricks/azure/mcp
+        chainedAuth:
+          oauth:
+            clientId: "<ENTRA_APP_CLIENT_ID>"
+            certificateKeyPairRef:
+              name: entra-client-cert
+            scopes:
+            # Azure Databricks first-party app ID — same in every Azure tenant.
+            - 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default
+            authorizeUrl: https://login.microsoftonline.com/<ENTRA_TENANT_ID>/oauth2/v2.0/authorize
+            accessTokenUrl: https://login.microsoftonline.com/<ENTRA_TENANT_ID>/oauth2/v2.0/token
+            clientName: Azure Databricks MCP
+            consent:
+              legalText: >-
+                By clicking Accept, you authorize Solo AI Gateway to access Azure
+                Databricks on your behalf. Your credentials will be securely stored and
+                used only for the requested operations. You may revoke access at any time.
+    entTokenExchange:
+      solo:
+        elicitation: {}
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-azure-databricks-openapi-backend

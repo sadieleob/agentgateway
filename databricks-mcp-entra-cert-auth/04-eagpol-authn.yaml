@@ -1,0 +1,41 @@
+# JWT auth via Entra ID v2.0.
+#
+# Downstream (MCP client → gateway) uses v2.0 tokens:
+#   issuer    https://login.microsoftonline.com/<ENTRA_TENANT_ID>/v2.0
+#   audience  bare client_id, no api:// prefix
+#   scope     <ENTRA_APP_CLIENT_ID>/agentgateway, no api:// prefix
+#
+# Using api:// in either audience or scope forces v1.0 tokens regardless of
+# requestedAccessTokenVersion. All three must use the v2.0 form.
+# Requires requestedAccessTokenVersion: 2 in the Entra app manifest.
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: azure-databricks-openapi-authn
+  namespace: agentgateway-system
+spec:
+  backend:
+    mcp:
+      authentication:
+        audiences:
+        - <ENTRA_APP_CLIENT_ID>
+        issuer: https://login.microsoftonline.com/<ENTRA_TENANT_ID>/v2.0
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-jwks
+          cacheDuration: 5m
+          jwksPath: <ENTRA_TENANT_ID>/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://<MCP_GATEWAY_HOSTNAME>/databricks/azure/mcp
+          resource: https://<MCP_GATEWAY_HOSTNAME>/databricks/azure/mcp
+          scopesSupported:
+          - <ENTRA_APP_CLIENT_ID>/agentgateway
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: ent-azure-databricks-openapi-backend

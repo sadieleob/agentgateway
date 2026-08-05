@@ -1,0 +1,50 @@
+# Entra client certificate — used by both OAuth legs to authenticate to Entra
+# as a confidential client (private_key_jwt / PS256), replacing client_secret.
+#
+# The certificate public key must be uploaded to the Entra app registration
+# (Certificates & secrets → Upload certificate) before the controller starts
+# using it. The controller loads the certificate at startup — a restart is
+# required after rotation.
+#
+# RSA only. The PS256 signer rejects non-RSA keys at load time.
+# cert-manager's default algorithm is RSA 2048, which is sufficient.
+#
+# The same Secret (entra-client-cert) is referenced by both legs:
+#   - upstream:   entElicitation.brokered.chainedAuth.oauth.certificateKeyPairRef
+#                 (resolved in the policy namespace — no explicit namespace needed)
+#   - downstream: KGW_OAUTH_ISSUER_CONFIG downstream_server.certificate_key_pair_ref
+#                 (requires explicit {name, namespace} — it is not defaulted)
+#
+# Without cert-manager, create the Secret by hand:
+#   openssl req -x509 -newkey rsa:2048 -keyout tls.key -out tls.crt \
+#     -days 90 -nodes -subj "/CN=agw-databricks-entra-client-assertion"
+#   kubectl -n agentgateway-system create secret tls entra-client-cert \
+#     --cert=tls.crt --key=tls.key
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: entra-client-cert-issuer
+  namespace: agentgateway-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: entra-client-cert
+  namespace: agentgateway-system
+spec:
+  secretName: entra-client-cert
+  commonName: agw-databricks-entra-client-assertion
+  duration: 2160h   # 90 days
+  renewBefore: 360h # 15 days — upload renewed cert to Entra before expiry
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always
+  usages:
+  - digital signature
+  issuerRef:
+    name: entra-client-cert-issuer
+    kind: Issuer
+    group: cert-manager.io

@@ -1,0 +1,24 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: azure-databricks-openapi-policy
+  namespace: agentgateway-system
+spec:
+  backend:
+    tls: {}
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: azure-databricks-openapi-mcp
+  traffic:
+    cors:
+      allowCredentials: false
+      allowHeaders:
+      - '*'
+      allowMethods:
+      - '*'
+      allowOrigins:
+      - '*'
+      exposeHeaders:
+      - www-authenticate
+      maxAge: 5

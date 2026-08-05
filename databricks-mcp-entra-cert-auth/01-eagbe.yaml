@@ -1,0 +1,19 @@
+# Azure Databricks EAGBE — OpenAPI protocol against the Azure-hosted workspace.
+# Azure Databricks validates Entra access tokens natively, so the banked Entra token
+# is the upstream credential — there is no Databricks-side OAuth exchange.
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
+metadata:
+  name: ent-azure-databricks-openapi-backend
+  namespace: agentgateway-system
+spec:
+  entMcp:
+    targets:
+    - name: ent-azure-databricks-openapi
+      static:
+        host: <DATABRICKS_WORKSPACE_HOST>
+        openAPI:
+          schemaRef:
+            name: azure-databricks-openapi-schema
+        port: 443
+        protocol: OpenAPI

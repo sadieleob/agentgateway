@@ -1,0 +1,481 @@
+# Azure Databricks REST API — curated OpenAPI 3.0 subset.
+# The gateway translates each operation into one MCP tool. This is a deliberately
+# small, read-mostly subset (SQL statement execution + Unity Catalog browsing).
+# To widen it, add operations from the Databricks REST reference and keep
+# servers[0].url at /api — paths below are relative to it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-databricks-openapi-schema
+  namespace: agentgateway-system
+data:
+  schema: |
+    {
+      "openapi": "3.0.3",
+      "info": {
+        "title": "Azure Databricks",
+        "description": "Curated subset of the Azure Databricks workspace REST API: SQL Statement Execution and Unity Catalog browsing.",
+        "version": "2.0"
+      },
+      "servers": [
+        {
+          "url": "/api",
+          "description": "Azure Databricks workspace REST API"
+        }
+      ],
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "tags": [
+        {
+          "name": "SQL Statements",
+          "description": "Execute SQL against a SQL warehouse and retrieve results"
+        },
+        {
+          "name": "SQL Warehouses",
+          "description": "Discover the warehouses available to run statements on"
+        },
+        {
+          "name": "Unity Catalog",
+          "description": "Browse catalogs, schemas and tables"
+        }
+      ],
+      "paths": {
+        "/2.0/sql/statements": {
+          "post": {
+            "summary": "Execute a SQL statement",
+            "description": "Submits a SQL statement to a warehouse for execution. With the default wait_timeout the call blocks briefly and returns inline results for fast queries; slower queries return status PENDING or RUNNING and a statement_id to poll with getStatement.",
+            "operationId": "executeStatement",
+            "tags": ["SQL Statements"],
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "required": ["statement", "warehouse_id"],
+                    "properties": {
+                      "statement": {
+                        "type": "string",
+                        "description": "The SQL statement to execute.",
+                        "example": "SELECT * FROM samples.nyctaxi.trips LIMIT 10"
+                      },
+                      "warehouse_id": {
+                        "type": "string",
+                        "description": "ID of the SQL warehouse to run the statement on, from listWarehouses."
+                      },
+                      "catalog": {
+                        "type": "string",
+                        "description": "Catalog used as the default for the statement."
+                      },
+                      "schema": {
+                        "type": "string",
+                        "description": "Schema used as the default for the statement."
+                      },
+                      "parameters": {
+                        "type": "array",
+                        "description": "Named parameter markers bound in the statement.",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": { "type": "string" },
+                            "value": { "type": "string" },
+                            "type": { "type": "string" }
+                          }
+                        }
+                      },
+                      "row_limit": {
+                        "type": "integer",
+                        "description": "Maximum number of rows to return."
+                      },
+                      "wait_timeout": {
+                        "type": "string",
+                        "description": "How long to wait inline for the statement, 0s or 5s-50s.",
+                        "default": "10s"
+                      },
+                      "on_wait_timeout": {
+                        "type": "string",
+                        "enum": ["CONTINUE", "CANCEL"],
+                        "description": "What to do when wait_timeout elapses before the statement finishes.",
+                        "default": "CONTINUE"
+                      },
+                      "format": {
+                        "type": "string",
+                        "enum": ["JSON_ARRAY", "ARROW_STREAM", "CSV"],
+                        "default": "JSON_ARRAY"
+                      },
+                      "disposition": {
+                        "type": "string",
+                        "enum": ["INLINE", "EXTERNAL_LINKS"],
+                        "description": "INLINE returns results in the response; EXTERNAL_LINKS returns pre-signed URLs.",
+                        "default": "INLINE"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Statement accepted; state reports whether results are already available",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/StatementResponse" }
+                  }
+                }
+              },
+              "400": { "$ref": "#/components/responses/Error" },
+              "403": { "$ref": "#/components/responses/Error" }
+            }
+          }
+        },
+        "/2.0/sql/statements/{statement_id}": {
+          "get": {
+            "summary": "Get statement status and results",
+            "description": "Returns the current state of a statement and, once it has succeeded, the result chunk.",
+            "operationId": "getStatement",
+            "tags": ["SQL Statements"],
+            "parameters": [
+              {
+                "name": "statement_id",
+                "in": "path",
+                "required": true,
+                "schema": { "type": "string" },
+                "description": "The statement_id returned by executeStatement."
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Current statement state and results",
+                "content": {
+                  "application/json": {
+                    "schema": { "$ref": "#/components/schemas/StatementResponse" }
+                  }
+                }
+              },
+              "404": { "$ref": "#/components/responses/Error" }
+            }
+          }
+        },
+        "/2.0/sql/statements/{statement_id}/cancel": {
+          "post": {
+            "summary": "Cancel a running statement",
+            "description": "Requests cancellation of a statement that is still PENDING or RUNNING.",
+            "operationId": "cancelStatement",
+            "tags": ["SQL Statements"],
+            "parameters": [
+              {
+                "name": "statement_id",
+                "in": "path",
+                "required": true,
+                "schema": { "type": "string" }
+              }
+            ],
+            "responses": {
+              "200": { "description": "Cancellation requested" },
+              "404": { "$ref": "#/components/responses/Error" }
+            }
+          }
+        },
+        "/2.0/sql/warehouses": {
+          "get": {
+            "summary": "List SQL warehouses",
+            "description": "Lists the SQL warehouses in the workspace. Use a warehouse id from here as warehouse_id in executeStatement.",
+            "operationId": "listWarehouses",
+            "tags": ["SQL Warehouses"],
+            "responses": {
+              "200": {
+                "description": "Warehouses visible to the caller",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "warehouses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "name": { "type": "string" },
+                              "state": { "type": "string" },
+                              "cluster_size": { "type": "string" },
+                              "warehouse_type": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/2.1/unity-catalog/catalogs": {
+          "get": {
+            "summary": "List catalogs",
+            "description": "Lists the Unity Catalog catalogs the caller can access.",
+            "operationId": "listCatalogs",
+            "tags": ["Unity Catalog"],
+            "parameters": [
+              {
+                "name": "max_results",
+                "in": "query",
+                "schema": { "type": "integer" },
+                "description": "Maximum number of catalogs to return."
+              },
+              {
+                "name": "page_token",
+                "in": "query",
+                "schema": { "type": "string" },
+                "description": "Opaque token from a previous response."
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Catalogs visible to the caller",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "catalogs": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" },
+                              "comment": { "type": "string" },
+                              "owner": { "type": "string" }
+                            }
+                          }
+                        },
+                        "next_page_token": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/2.1/unity-catalog/schemas": {
+          "get": {
+            "summary": "List schemas in a catalog",
+            "operationId": "listSchemas",
+            "tags": ["Unity Catalog"],
+            "parameters": [
+              {
+                "name": "catalog_name",
+                "in": "query",
+                "required": true,
+                "schema": { "type": "string" },
+                "description": "Catalog whose schemas should be listed."
+              },
+              {
+                "name": "max_results",
+                "in": "query",
+                "schema": { "type": "integer" }
+              },
+              {
+                "name": "page_token",
+                "in": "query",
+                "schema": { "type": "string" }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Schemas in the catalog",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "schemas": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" },
+                              "catalog_name": { "type": "string" },
+                              "full_name": { "type": "string" },
+                              "comment": { "type": "string" }
+                            }
+                          }
+                        },
+                        "next_page_token": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/2.1/unity-catalog/tables": {
+          "get": {
+            "summary": "List tables in a schema",
+            "description": "Lists tables in a Unity Catalog schema, including their column definitions. Use this to discover what to query before calling executeStatement.",
+            "operationId": "listTables",
+            "tags": ["Unity Catalog"],
+            "parameters": [
+              {
+                "name": "catalog_name",
+                "in": "query",
+                "required": true,
+                "schema": { "type": "string" }
+              },
+              {
+                "name": "schema_name",
+                "in": "query",
+                "required": true,
+                "schema": { "type": "string" }
+              },
+              {
+                "name": "max_results",
+                "in": "query",
+                "schema": { "type": "integer" }
+              },
+              {
+                "name": "page_token",
+                "in": "query",
+                "schema": { "type": "string" }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "Tables in the schema",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "tables": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" },
+                              "full_name": { "type": "string" },
+                              "table_type": { "type": "string" },
+                              "comment": { "type": "string" },
+                              "columns": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": { "type": "string" },
+                                    "type_text": { "type": "string" },
+                                    "comment": { "type": "string" }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next_page_token": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "components": {
+        "securitySchemes": {
+          "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Entra access token for the Azure Databricks resource, attached by the gateway."
+          }
+        },
+        "responses": {
+          "Error": {
+            "description": "Databricks error response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error_code": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "schemas": {
+          "StatementResponse": {
+            "type": "object",
+            "properties": {
+              "statement_id": { "type": "string" },
+              "status": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "enum": ["PENDING", "RUNNING", "SUCCEEDED", "FAILED", "CANCELED", "CLOSED"]
+                  },
+                  "error": {
+                    "type": "object",
+                    "properties": {
+                      "error_code": { "type": "string" },
+                      "message": { "type": "string" }
+                    }
+                  }
+                }
+              },
+              "manifest": {
+                "type": "object",
+                "description": "Result shape: schema, chunk layout and row counts.",
+                "properties": {
+                  "format": { "type": "string" },
+                  "total_row_count": { "type": "integer" },
+                  "truncated": { "type": "boolean" },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "column_count": { "type": "integer" },
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": { "type": "string" },
+                            "type_text": { "type": "string" },
+                            "position": { "type": "integer" }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "result": {
+                "type": "object",
+                "description": "First result chunk. With disposition INLINE, data_array holds the rows.",
+                "properties": {
+                  "chunk_index": { "type": "integer" },
+                  "row_count": { "type": "integer" },
+                  "row_offset": { "type": "integer" },
+                  "data_array": {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }

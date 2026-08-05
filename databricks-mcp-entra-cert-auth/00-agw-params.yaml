@@ -1,0 +1,26 @@
+# entTokenExchange.solo carries its own backendRef to the controller STS, so the
+# legacy STS_URI / STS_AUTH_TOKEN env vars on the gateway are no longer needed.
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayParameters
+metadata:
+  name: agentgateway-oas-params
+  namespace: agentgateway-system
+spec:
+  logging:
+    level: info
+  rawConfig:
+    config:
+      logging:
+        fields:
+          add:
+            jwt: jwt
+            rq.headers: flatten(request.headers)
+            session_id: mcp.sessionId
+            tool_name: mcp.tool.name
+            tool_target: mcp.tool.target
+            user_email: default(jwt.email, "unknown")
+            user_sub: jwt.sub
+        format: json
+  service:
+    spec:
+      type: LoadBalancer
