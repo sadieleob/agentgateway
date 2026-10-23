@@ -1,0 +1,21 @@
+{
+  "gateway_config": {
+    "base_url": "https://REPLACE_WITH_GATEWAY_HOST/oauth-issuer"
+  },
+  "downstream_server": {
+    "name": "downstream",
+    "client_id": "REPLACE_WITH_ENTRA_CLIENT_ID",
+    "client_secret": "REPLACE_WITH_ENTRA_CLIENT_SECRET",
+    "authorize_url": "https://login.microsoftonline.com/REPLACE_WITH_ENTRA_TENANT_ID/oauth2/v2.0/authorize",
+    "token_url": "https://login.microsoftonline.com/REPLACE_WITH_ENTRA_TENANT_ID/oauth2/v2.0/token",
+    "scopes": [
+      "api://REPLACE_WITH_ENTRA_CLIENT_ID/agentgateway"
+    ]
+  },
+  "consent": {
+    "enabled": true,
+    "platform_name": "AgentGateway",
+    "backend_name": "MCP",
+    "legal_text": "By clicking Accept, you authorize AgentGateway to access the selected resource on your behalf. You may revoke access at any time."
+  }
+}

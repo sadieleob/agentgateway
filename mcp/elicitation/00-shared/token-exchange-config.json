@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "issuer": "https://REPLACE_WITH_GATEWAY_HOST/oauth-issuer",
+  "subjectValidators": [
+    {
+      "ValidatorType": "remote",
+      "RemoteConfig": {
+        "Url": "https://login.microsoftonline.com/REPLACE_WITH_ENTRA_TENANT_ID/discovery/v2.0/keys"
+      }
+    }
+  ],
+  "actorValidators": [ { "ValidatorType": "k8s" } ],
+  "apiValidators": [ { "ValidatorType": "k8s" } ],
+  "database": {
+    "type": "postgres",
+    "postgres": {
+      "url": "postgres://agw:REPLACE_WITH_POSTGRES_PASSWORD@token-exchange-postgres.agentgateway-system.svc.cluster.local:5432/tokenexchange?sslmode=disable"
+    }
+  }
+}

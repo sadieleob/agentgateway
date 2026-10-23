@@ -1,0 +1,19 @@
+# Enterprise AgentGateway Helm values: oauth-issuer + token exchange (STS).
+# Both Secrets below must exist BEFORE the controller starts.
+licensing:
+  createSecret: false
+  secretName: REPLACE_WITH_LICENSE_SECRET_NAME
+
+controller:
+  extraEnv:
+    KGW_OAUTH_ISSUER_CONFIG:            # oauth-issuer config (oauth-issuer-config.json)
+      valueFrom:
+        secretKeyRef:
+          name: agentgateway-oauth-issuer-config
+          key: KGW_OAUTH_ISSUER_CONFIG
+
+tokenExchange:
+  enabled: true                         # serves /oauth-issuer and the STS on :7777
+  configSecret:                         # token-exchange-config.json
+    name: agentgateway-token-exchange-config
+    key: config

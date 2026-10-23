@@ -1,0 +1,63 @@
+# Durable store for the token service (STS): elicitations + encrypted upstream tokens.
+# The default SQLite on an emptyDir loses everything when the controller restarts.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: token-exchange-postgres-auth
+  namespace: agentgateway-system
+stringData:
+  POSTGRES_PASSWORD: REPLACE_WITH_POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: token-exchange-postgres
+  namespace: agentgateway-system
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: token-exchange-postgres
+  namespace: agentgateway-system
+  labels: {app: token-exchange-postgres}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: token-exchange-postgres}
+  template:
+    metadata:
+      labels: {app: token-exchange-postgres}
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:18.6-alpine3.24
+        env:
+        - {name: POSTGRES_DB, value: tokenexchange}
+        - {name: POSTGRES_USER, value: agw}
+        - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef: {name: token-exchange-postgres-auth, key: POSTGRES_PASSWORD}
+        ports: [{containerPort: 5432}]
+        readinessProbe:
+          exec: {command: [sh, -c, "pg_isready -U agw -d tokenexchange"]}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts: [{name: data, mountPath: /var/lib/postgresql/data}]
+      volumes:
+      - name: data
+        persistentVolumeClaim: {claimName: token-exchange-postgres}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: token-exchange-postgres
+  namespace: agentgateway-system
+spec:
+  selector: {app: token-exchange-postgres}
+  ports: [{port: 5432, targetPort: 5432}]

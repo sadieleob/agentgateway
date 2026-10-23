@@ -1,0 +1,18 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: datadog-mcp-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - name: agentgateway-mcp
+    namespace: agentgateway-system
+  rules:
+  - matches:
+    - path: {type: PathPrefix, value: /mcp/datadog}
+    - path: {type: PathPrefix, value: /.well-known/oauth-protected-resource/mcp/datadog}
+    - path: {type: PathPrefix, value: /.well-known/oauth-authorization-server/mcp/datadog}
+    backendRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: datadog-mcp-backend

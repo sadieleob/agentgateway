@@ -1,0 +1,37 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: github-mcp-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: github
+      static:
+        host: api.githubcopilot.com
+        path: /mcp/
+        port: 443
+  policies:
+    tls: {}
+    mcp:
+      # Inbound: users authenticate to the gateway with Entra (v1 access token from the
+      # gateway's oauth-issuer). The gateway acts as the MCP client's authorization server.
+      authentication:
+        mode: Strict
+        issuer: https://sts.windows.net/REPLACE_WITH_ENTRA_TENANT_ID/
+        audiences:
+        - api://REPLACE_WITH_ENTRA_CLIENT_ID
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-idp
+          cacheDuration: 5m
+          jwksPath: REPLACE_WITH_ENTRA_TENANT_ID/discovery/v2.0/keys
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://REPLACE_WITH_GATEWAY_HOST/mcp/github
+          resource: https://REPLACE_WITH_GATEWAY_HOST/mcp/github
+          scopesSupported:
+          - api://REPLACE_WITH_ENTRA_CLIENT_ID/agentgateway

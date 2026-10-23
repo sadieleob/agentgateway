@@ -1,0 +1,38 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayParameters
+metadata:
+  name: agentgateway-mcp-params
+  namespace: agentgateway-system
+spec:
+  env:
+  # Proxy -> STS: without these the proxy returns
+  # "500 token exchange required but not configured".
+  - name: STS_URI
+    value: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/elicitations/oauth2/token
+  - name: STS_AUTH_TOKEN
+    value: /var/run/secrets/xds-tokens/xds-token
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: agentgateway-mcp
+  namespace: agentgateway-system
+spec:
+  gatewayClassName: enterprise-agentgateway
+  infrastructure:
+    parametersRef:
+      group: enterpriseagentgateway.solo.io
+      kind: EnterpriseAgentgatewayParameters
+      name: agentgateway-mcp-params
+  listeners:
+  - name: https
+    protocol: HTTPS
+    port: 443
+    hostname: REPLACE_WITH_GATEWAY_HOST
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: REPLACE_WITH_TLS_SECRET
+    allowedRoutes:
+      namespaces:
+        from: Same
