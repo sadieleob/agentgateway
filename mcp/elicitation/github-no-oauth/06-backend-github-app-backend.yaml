@@ -1,0 +1,17 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: github-app-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: github-app
+      static:
+        host: github-mcp-server.agentgateway-system.svc.cluster.local
+        path: /mcp
+        policies:
+          auth:
+            secretRef:
+              name: github-mcp-credentials
+        port: 8082

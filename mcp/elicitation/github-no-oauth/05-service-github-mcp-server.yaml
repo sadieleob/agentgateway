@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: github-mcp-server
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: github-mcp-server
+  ports:
+  - name: http
+    port: 8082
+    targetPort: 8082

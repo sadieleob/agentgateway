@@ -1,28 +1,19 @@
-# Datadog MCP (elicitation, chained DCR)
+# Datadog (elicitation, chained DCR)
 
-Upstream: Datadog's remote MCP server `https://mcp.datadoghq.com/v1/mcp` (US1; region-specific).
-Verified on AGW 2026.10.0, 2026-10-23 (see [../README.md](../README.md)).
+Upstream: `mcp.datadoghq.com/v1/mcp`.
+Verified: AGW 2026.10.0, 2026-10-21 and 2026-10-23 (elicitations completed). Same config running on the test cluster after the upgrade to 2026.10.1.
 
-## Datadog side (org admin, Organization Settings → MCP)
+## Setup
 
-1. Enable MCP access for the org (enable write access only if users need write tools).
-2. **MCP OAuth Redirect URLs** → add `https://<gateway-host>/oauth-issuer/callback/upstream`.
-3. Users need the **MCP Read** permission (and **MCP Write** for write tools) plus the
-   resource-level permissions of what they query. The MCP server only shows what the user can see.
+Dynamic client registration: no OAuth app to create. `base_url` must be the authorization server issuer, `https://mcp.datadoghq.com/v1/mcp`. Scope: `mcp_all`.
 
-Datadog supports dynamic client registration, so no OAuth app or client secret is needed.
+## Files
 
-`base_url` in the secret **must include `/v1/mcp`**: the gateway requires it to equal the `issuer`
-in Datadog's authorization-server metadata. With the bare host the authorize step fails with
-`authorization server metadata issuer "https://mcp.datadoghq.com/v1/mcp" does not match base_url`.
-
-Scope: `mcp_all` (the only scope Datadog advertises).
-
-## Apply
+Individual CRs (`01-secret-combined-datadog-token-exchange.yaml`, `02-backend-combined-datadog-backend.yaml`, `03-eagpol-combined-datadog-exchange.yaml`, `04-httproute-combined-datadog-route.yaml`) or all of them in `crs-all.yaml`. Shared CRs (Entra JWKS
+backend, OAuth issuer route, CORS) are in [`../00-shared/`](../00-shared/). Replace every `REPLACE_WITH_*` value.
 
 ```bash
-kubectl apply -f 01-backend.yaml -f 02-secret-token-exchange.yaml \
-  -f 03-eagpol-token-exchange.yaml -f 04-httproute.yaml
+kubectl apply -f crs-all.yaml
 ```
 
 Connect: `https://<gateway-host>/mcp/datadog`.

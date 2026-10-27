@@ -1,0 +1,35 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: combined-postman-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: mcp-target-postman
+      static:
+        host: mcp.postman.com
+        path: /minimal
+        port: 443
+  policies:
+    mcp:
+      authentication:
+        audiences:
+        - api://REPLACE_WITH_ENTRA_CLIENT_ID
+        issuer: https://sts.windows.net/REPLACE_WITH_ENTRA_TENANT_ID/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-idp
+          cacheDuration: 5m
+          jwksPath: REPLACE_WITH_ENTRA_TENANT_ID/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://REPLACE_WITH_GATEWAY_HOST/mcp/postman
+          resource: https://REPLACE_WITH_GATEWAY_HOST/mcp/postman
+          scopesSupported:
+          - api://REPLACE_WITH_ENTRA_CLIENT_ID/agentgateway
+    tls: {}

@@ -1,0 +1,28 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: combined-servicenow-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    entElicitation:
+      brokered:
+        chainedAuth:
+          oauth:
+            accessTokenUrl: https://REPLACE_WITH_SERVICENOW_INSTANCE_HOST/oauth_token.do
+            authorizeUrl: https://REPLACE_WITH_SERVICENOW_INSTANCE_HOST/oauth_auth.do
+            clientId: REPLACE_WITH_SERVICENOW_CLIENT_ID
+            clientName: ServiceNow
+            clientSecretRef:
+              key: client_secret
+              name: servicenow-oauth-client
+            scopes:
+            - useraccount
+        mcpResourcePath: /mcp/servicenow
+    entTokenExchange:
+      solo:
+        elicitation: {}
+  targetRefs:
+  - group: enterpriseagentgateway.solo.io
+    kind: EnterpriseAgentgatewayBackend
+    name: combined-servicenow-backend

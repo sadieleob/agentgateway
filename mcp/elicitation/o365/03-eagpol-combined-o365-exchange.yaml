@@ -1,0 +1,14 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: combined-o365-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: combined-o365-token-exchange
+  targetRefs:
+  - group: agentgateway.dev
+    kind: AgentgatewayBackend
+    name: combined-o365-backend

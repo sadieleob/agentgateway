@@ -1,0 +1,32 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: combined-dynatrace-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    entElicitation:
+      brokered:
+        chainedAuth:
+          oauth:
+            accessTokenUrl: http://agentgateway-mcp.agentgateway-system.svc.cluster.local:8080/oauth-upstream/dynatrace/token
+            authorizeUrl: https://sso.dynatrace.com/oauth2/authorize?resource=https%3A%2F%2FREPLACE_WITH_DYNATRACE_ENV_HOST%2Fplatform-reserved%2Fmcp-gateway%2Fv0.1%2Fservers%2Fdynatrace-mcp%2Fmcp
+            clientId: REPLACE_WITH_DYNATRACE_CLIENT_ID
+            clientName: Dynatrace
+            clientSecretRef:
+              key: client_secret
+              name: dynatrace-oauth-client
+            pkce: Always
+            scopes:
+            - mcp-gateway:servers:invoke
+            - mcp-gateway:servers:read
+            - storage:logs:read
+            - storage:metrics:read
+        mcpResourcePath: /mcp/dynatrace
+    entTokenExchange:
+      solo:
+        elicitation: {}
+  targetRefs:
+  - group: agentgateway.dev
+    kind: AgentgatewayBackend
+    name: combined-dynatrace-backend

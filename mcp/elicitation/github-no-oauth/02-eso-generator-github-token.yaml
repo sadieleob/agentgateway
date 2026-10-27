@@ -1,0 +1,13 @@
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: GithubAccessToken
+metadata:
+  name: github-token
+  namespace: agentgateway-system
+spec:
+  appID: REPLACE_WITH_GITHUB_APP_ID
+  auth:
+    privateKey:
+      secretRef:
+        key: privatekey
+        name: github-app-privatekey
+  installID: REPLACE_WITH_GITHUB_INSTALLATION_ID

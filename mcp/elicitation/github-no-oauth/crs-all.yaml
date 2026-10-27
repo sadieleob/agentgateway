@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-app-privatekey
+  namespace: agentgateway-system
+type: Opaque
+stringData:
+  privatekey: REPLACE_WITH_GITHUB_APP_PRIVATE_KEY_PEM
+---
+apiVersion: generators.external-secrets.io/v1alpha1
+kind: GithubAccessToken
+metadata:
+  name: github-token
+  namespace: agentgateway-system
+spec:
+  appID: REPLACE_WITH_GITHUB_APP_ID
+  auth:
+    privateKey:
+      secretRef:
+        key: privatekey
+        name: github-app-privatekey
+  installID: REPLACE_WITH_GITHUB_INSTALLATION_ID
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-mcp-credentials-es
+  namespace: agentgateway-system
+spec:
+  dataFrom:
+  - sourceRef:
+      generatorRef:
+        apiVersion: generators.external-secrets.io/v1alpha1
+        kind: GithubAccessToken
+        name: github-token
+  refreshInterval: 30m
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    name: github-mcp-credentials
+    template:
+      data:
+        Authorization: Bearer {{ .token }}
+      engineVersion: v2
+      mergePolicy: Replace
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-mcp-server
+  namespace: agentgateway-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-mcp-server
+  template:
+    metadata:
+      labels:
+        app: github-mcp-server
+    spec:
+      containers:
+      - name: github-mcp-server
+        image: REPLACE_WITH_GITHUB_MCP_SERVER_IMAGE
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8082
+          name: http
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: github-mcp-server
+  namespace: agentgateway-system
+spec:
+  selector:
+    app: github-mcp-server
+  ports:
+  - name: http
+    port: 8082
+    targetPort: 8082
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: github-app-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: github-app
+      static:
+        host: github-mcp-server.agentgateway-system.svc.cluster.local
+        path: /mcp
+        policies:
+          auth:
+            secretRef:
+              name: github-mcp-credentials
+        port: 8082
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: github-noauth-auth
+  namespace: agentgateway-system
+spec:
+  backend:
+    mcp:
+      authentication:
+        audiences:
+        - api://REPLACE_WITH_ENTRA_CLIENT_ID
+        issuer: https://sts.windows.net/REPLACE_WITH_ENTRA_TENANT_ID/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-idp
+          cacheDuration: 5m
+          jwksPath: REPLACE_WITH_ENTRA_TENANT_ID/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://REPLACE_WITH_GATEWAY_HOST/mcp/github-noauth
+          resource: https://REPLACE_WITH_GATEWAY_HOST/mcp/github-noauth
+          scopesSupported:
+          - api://REPLACE_WITH_ENTRA_CLIENT_ID/agentgateway
+      authorization:
+        action: Allow
+        policy:
+          matchExpressions:
+          - jwt.groups.exists(g, g == "REPLACE_WITH_ENTRA_GROUP_ID")
+  targetRefs:
+  - group: agentgateway.dev
+    kind: AgentgatewayBackend
+    name: github-app-backend
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: github-noauth-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: agentgateway-mcp
+    namespace: agentgateway-system
+  rules:
+  - backendRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: github-app-backend
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /mcp/github-noauth
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/mcp/github-noauth
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/mcp/github-noauth

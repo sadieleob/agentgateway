@@ -1,0 +1,17 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayPolicy
+metadata:
+  name: dynatrace-token-resource
+  namespace: agentgateway-system
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: dynatrace-token-resource
+  traffic:
+    transformation:
+      request:
+        body: |
+          form.encode(form.decode(request.body).merge({
+            "resource": "https://REPLACE_WITH_DYNATRACE_ENV_HOST/platform-reserved/mcp-gateway/v0.1/servers/dynatrace-mcp/mcp"
+          }))

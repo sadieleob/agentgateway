@@ -1,0 +1,11 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: dynatrace-sso
+  namespace: agentgateway-system
+spec:
+  policies:
+    tls: {}
+  static:
+    host: sso.dynatrace.com
+    port: 443

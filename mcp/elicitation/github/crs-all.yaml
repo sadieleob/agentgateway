@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: combined-github-token-exchange
+  namespace: agentgateway-system
+type: Opaque
+stringData:
+  access_token_url: https://github.com/login/oauth/access_token
+  app_id: github
+  authorize_url: https://github.com/login/oauth/authorize
+  client_id: REPLACE_WITH_GITHUB_CLIENT_ID
+  client_name: GitHub
+  client_secret: REPLACE_WITH_GITHUB_CLIENT_SECRET
+  mcp_resource: /mcp/github
+  scopes: repo read:org
+---
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: combined-github-backend
+  namespace: agentgateway-system
+spec:
+  mcp:
+    targets:
+    - name: mcp-target-github
+      static:
+        host: api.githubcopilot.com
+        path: /mcp/
+        port: 443
+  policies:
+    mcp:
+      authentication:
+        audiences:
+        - api://REPLACE_WITH_ENTRA_CLIENT_ID
+        issuer: https://sts.windows.net/REPLACE_WITH_ENTRA_TENANT_ID/
+        jwks:
+          backendRef:
+            group: agentgateway.dev
+            kind: AgentgatewayBackend
+            name: entra-idp
+          cacheDuration: 5m
+          jwksPath: REPLACE_WITH_ENTRA_TENANT_ID/discovery/v2.0/keys
+        mode: Strict
+        resourceMetadata:
+          agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
+          authorizationServers:
+          - https://REPLACE_WITH_GATEWAY_HOST/mcp/github
+          resource: https://REPLACE_WITH_GATEWAY_HOST/mcp/github
+          scopesSupported:
+          - api://REPLACE_WITH_ENTRA_CLIENT_ID/agentgateway
+    tls: {}
+---
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: combined-github-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: combined-github-token-exchange
+  targetRefs:
+  - group: agentgateway.dev
+    kind: AgentgatewayBackend
+    name: combined-github-backend
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: combined-github-route
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: agentgateway-mcp
+    namespace: agentgateway-system
+  rules:
+  - backendRefs:
+    - group: agentgateway.dev
+      kind: AgentgatewayBackend
+      name: combined-github-backend
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /mcp/github
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-protected-resource/mcp/github
+    - path:
+        type: PathPrefix
+        value: /.well-known/oauth-authorization-server/mcp/github

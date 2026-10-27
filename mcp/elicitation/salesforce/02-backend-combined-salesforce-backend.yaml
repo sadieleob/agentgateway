@@ -1,26 +1,23 @@
-apiVersion: agentgateway.dev/v1alpha1
-kind: AgentgatewayBackend
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayBackend
 metadata:
-  name: github-mcp-backend
+  name: combined-salesforce-backend
   namespace: agentgateway-system
 spec:
-  mcp:
+  entMcp:
     targets:
-    - name: github
+    - name: mcp-target-salesforce
       static:
-        host: api.githubcopilot.com
-        path: /mcp/
+        host: api.salesforce.com
+        path: REPLACE_WITH_SF_MCP_SERVER_PATH
         port: 443
+        protocol: StreamableHTTP
   policies:
-    tls: {}
     mcp:
-      # Inbound: users authenticate to the gateway with Entra (v1 access token from the
-      # gateway's oauth-issuer). The gateway acts as the MCP client's authorization server.
       authentication:
-        mode: Strict
-        issuer: https://sts.windows.net/REPLACE_WITH_ENTRA_TENANT_ID/
         audiences:
         - api://REPLACE_WITH_ENTRA_CLIENT_ID
+        issuer: https://sts.windows.net/REPLACE_WITH_ENTRA_TENANT_ID/
         jwks:
           backendRef:
             group: agentgateway.dev
@@ -28,10 +25,12 @@ spec:
             name: entra-idp
           cacheDuration: 5m
           jwksPath: REPLACE_WITH_ENTRA_TENANT_ID/discovery/v2.0/keys
+        mode: Strict
         resourceMetadata:
           agentgateway.dev/issuer-proxy: http://enterprise-agentgateway.agentgateway-system.svc.cluster.local:7777/oauth-issuer
           authorizationServers:
-          - https://REPLACE_WITH_GATEWAY_HOST/mcp/github
-          resource: https://REPLACE_WITH_GATEWAY_HOST/mcp/github
+          - https://REPLACE_WITH_GATEWAY_HOST/mcp/salesforce
+          resource: https://REPLACE_WITH_GATEWAY_HOST/mcp/salesforce
           scopesSupported:
           - api://REPLACE_WITH_ENTRA_CLIENT_ID/agentgateway
+    tls: {}

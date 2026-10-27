@@ -1,25 +1,19 @@
-# GitHub MCP (elicitation)
+# GitHub (elicitation, OAuth App)
 
-Upstream: GitHub's remote MCP server `https://api.githubcopilot.com/mcp/`.
-Verified on AGW 2026.10.0, 2026-10-23 (see [../README.md](../README.md)).
+Upstream: `api.githubcopilot.com/mcp/`.
+Verified: AGW 2026.10.0, 2026-10-23 (OAuth + consent, `initialize`, `tools/list` 200). Same config running on the test cluster after the upgrade to 2026.10.1.
 
-## GitHub side
+## Setup
 
-GitHub's OAuth server has no dynamic client registration, so register a client:
+GitHub has no dynamic client registration. Register a **GitHub OAuth App** with callback URL `https://<gateway-host>/oauth-issuer/callback/upstream` and put its client ID and secret in the token-exchange Secret. Scopes: `repo read:org`.
 
-1. GitHub → Settings → Developer settings → **OAuth Apps** → New OAuth App.
-2. **Authorization callback URL**: `https://<gateway-host>/oauth-issuer/callback/upstream`
-   (the gateway is the OAuth client; not the MCP client's callback).
-3. Copy the client ID and generate a client secret → `02-secret-token-exchange.yaml`.
-4. For org-owned repositories the OAuth App must be approved by an org owner.
+## Files
 
-Scopes used: `repo read:org`.
-
-## Apply
+Individual CRs (`01-secret-combined-github-token-exchange.yaml`, `02-backend-combined-github-backend.yaml`, `03-eagpol-combined-github-exchange.yaml`, `04-httproute-combined-github-route.yaml`) or all of them in `crs-all.yaml`. Shared CRs (Entra JWKS
+backend, OAuth issuer route, CORS) are in [`../00-shared/`](../00-shared/). Replace every `REPLACE_WITH_*` value.
 
 ```bash
-kubectl apply -f 01-backend.yaml -f 02-secret-token-exchange.yaml \
-  -f 03-eagpol-token-exchange.yaml -f 04-httproute.yaml
+kubectl apply -f crs-all.yaml
 ```
 
 Connect: `https://<gateway-host>/mcp/github`.

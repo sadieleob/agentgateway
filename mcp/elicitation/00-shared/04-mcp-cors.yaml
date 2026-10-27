@@ -6,10 +6,18 @@ metadata:
   namespace: agentgateway-system
 spec:
   targetRefs:
-  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: oauth-issuer-route}
-  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: github-mcp-route}
-  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: atlassian-mcp-route}
-  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: datadog-mcp-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-oauth-issuer-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-airtable-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-atlassian-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-cloudflare-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-datadog-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-dynatrace-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-github-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-o365-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-postman-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-salesforce-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: combined-servicenow-route}
+  - {group: gateway.networking.k8s.io, kind: HTTPRoute, name: github-noauth-route}
   traffic:
     cors:
       allowCredentials: false

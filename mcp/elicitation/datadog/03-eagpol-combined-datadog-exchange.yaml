@@ -1,0 +1,14 @@
+apiVersion: enterpriseagentgateway.solo.io/v1alpha1
+kind: EnterpriseAgentgatewayPolicy
+metadata:
+  name: combined-datadog-exchange
+  namespace: agentgateway-system
+spec:
+  backend:
+    tokenExchange:
+      elicitation:
+        secretName: combined-datadog-token-exchange
+  targetRefs:
+  - group: agentgateway.dev
+    kind: AgentgatewayBackend
+    name: combined-datadog-backend
