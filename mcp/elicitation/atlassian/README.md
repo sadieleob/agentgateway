@@ -1,7 +1,7 @@
 # Atlassian Rovo (elicitation, chained DCR)
 
 Upstream: `mcp.atlassian.com/v1/mcp`.
-Verified: AGW 2026.10.0, 2026-10-23. Same config running on the test cluster after the upgrade to 2026.10.1.
+Verified: AGW 2026.10.0, 2026-10-08 (elicitation completed, DCR client registered). Same config running on the test cluster after the upgrade to 2026.10.1.
 
 ## Setup
 

@@ -1,7 +1,7 @@
 # GitHub (elicitation, OAuth App)
 
 Upstream: `api.githubcopilot.com/mcp/`.
-Verified: AGW 2026.10.0, 2026-10-23 (OAuth + consent, `initialize`, `tools/list` 200). Same config running on the test cluster after the upgrade to 2026.10.1.
+Verified: AGW 2026.10.1, 2026-10-26 (elicitation completed, upstream token stored).
 
 ## Setup
 

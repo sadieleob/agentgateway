@@ -11,10 +11,10 @@ upgraded from 2026.10.0 on 2026-10-24), exported and redacted.
 
 | MCP server | Upstream | Client registration at the SaaS | Verified |
 |---|---|---|---|
-| [GitHub](./github/) | `api.githubcopilot.com/mcp/` | GitHub OAuth App (client ID + secret) | 2026.10.0, 2026-10-23: `initialize`, `tools/list` 200 |
+| [GitHub](./github/) | `api.githubcopilot.com/mcp/` | GitHub OAuth App (client ID + secret) | 2026.10.1, 2026-10-26: elicitation completed (upstream token stored) |
 | [GitHub, no per-user OAuth](./github-no-oauth/) | self-hosted github-mcp-server | GitHub App installation token (ESO), Entra group gate | 2026.10.0, 2026-10-19 |
-| [Atlassian Rovo](./atlassian/) | `mcp.atlassian.com/v1/mcp` | Dynamic client registration (none) | 2026.10.0, 2026-10-23 |
-| [Datadog](./datadog/) | `mcp.datadoghq.com/v1/mcp` | Dynamic client registration (none) | 2026.10.0, 2026-10-23 |
+| [Atlassian Rovo](./atlassian/) | `mcp.atlassian.com/v1/mcp` | Dynamic client registration (none) | 2026.10.0, 2026-10-08: elicitation completed |
+| [Datadog](./datadog/) | `mcp.datadoghq.com/v1/mcp` | Dynamic client registration (none) | 2026.10.0, 2026-10-21 and 2026-10-23; 2026.10.1, 2026-10-26: elicitation completed |
 | [Microsoft 365 (MCP Server for Enterprise)](./o365/) | `mcp.svc.cloud.microsoft/enterprise` | Entra app, delegated `MCP.Application.Read.All` | 2026-10-24: `tools/list`, tool call 200 |
 | [Dynatrace](./dynatrace/) | `<env>.apps.dynatrace.com` hosted MCP | Dynatrace OAuth client, PKCE, `resource` workaround | 2026.10.1, 2026-10-26 |
 | [Postman](./postman/) | `mcp.postman.com/minimal` | Dynamic client registration (none) | 2026.10.1, 2026-10-26 |
@@ -23,8 +23,7 @@ upgraded from 2026.10.0 on 2026-10-24), exported and redacted.
 | [Cloudflare](./cloudflare/) | `mcp.cloudflare.com/mcp` | Dynamic client registration (none) | 2026.10.1, 2026-10-26 |
 | [Salesforce Hosted MCP](./salesforce/) | `api.salesforce.com/platform/mcp/v1/...` | External Client App, public client + PKCE | 2026.10.1, 2026-10-27: `tools/list`, `tools/call` 200 |
 
-Client used for the test: an MCP client configured with only the gateway URL
-(`https://<gateway-host>/mcp/<server>`), no client ID.
+Test client: MCP Inspector, connected to `https://<gateway-host>/mcp/<server>`.
 
 ## Flow
 
@@ -41,7 +40,8 @@ MCP client ──(5) POST /mcp/github + Entra token ─▶ gateway validates JWT
 ```
 
 The MCP client never holds the SaaS token. The MCP server receives a normal request with the
-user's own SaaS token in `Authorization`.
+user's own SaaS token in `Authorization` (except [github-no-oauth](./github-no-oauth/), which sends one shared
+GitHub App installation token for every user).
 
 ## Prerequisites
 

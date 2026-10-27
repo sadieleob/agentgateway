@@ -5,7 +5,7 @@ Verified: AGW 2026.10.1, 2026-10-26 (access + refresh token stored).
 
 ## Setup
 
-The backend turns the ITSM OpenAPI schema in the ConfigMap into MCP tools. In ServiceNow, create an OAuth client (*OAuth - Authorization code grant*) with redirect URL `https://<gateway-host>/oauth-issuer/callback/upstream`; put its client ID in the policy and the secret in `servicenow-oauth-client`. Endpoints `/oauth_auth.do` and `/oauth_token.do`, scope `useraccount`. The schema's request examples contain ServiceNow demo `sys_id`s, not real records.
+The backend turns the ITSM OpenAPI schema in the ConfigMap into MCP tools. In ServiceNow, create an OAuth client (*OAuth - Authorization code grant*) with redirect URL `https://<gateway-host>/oauth-issuer/callback/upstream`; put its client ID in the policy and the secret in `servicenow-oauth-client`. Endpoints `/oauth_auth.do` and `/oauth_token.do`, scope `useraccount`. The schema's request examples include sample `sys_id` values (for example `681ccaf9c0a8016400b98a06818d57c7`, a user from ServiceNow's standard demo data).
 
 ## Files
 

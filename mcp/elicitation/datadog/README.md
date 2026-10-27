@@ -1,7 +1,7 @@
 # Datadog (elicitation, chained DCR)
 
 Upstream: `mcp.datadoghq.com/v1/mcp`.
-Verified: AGW 2026.10.0, 2026-10-21 and 2026-10-23 (elicitations completed). Same config running on the test cluster after the upgrade to 2026.10.1.
+Verified: AGW 2026.10.0, 2026-10-21 and 2026-10-23; AGW 2026.10.1, 2026-10-26 (elicitations completed).
 
 ## Setup
 
